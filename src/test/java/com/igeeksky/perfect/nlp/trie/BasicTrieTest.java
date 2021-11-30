@@ -4,6 +4,7 @@ package com.igeeksky.perfect.nlp.trie;
 import com.igeeksky.xtool.core.function.tuple.Tuple2;
 import com.igeeksky.xtool.core.nlp.Found;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -93,6 +94,7 @@ public class BasicTrieTest {
     }
 
     @Test
+    @Ignore
     public void performance() {
         BasicTrie<String> trie = new BasicTrie<>();
         trie.put("abcdefghij", "abcdefghij");
