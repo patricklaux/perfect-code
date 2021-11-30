@@ -1,23 +1,52 @@
-# Compiled class file
-*.class
+### STS ###
+.apt_generated
+.springBeans
+.sts4-cache
 
-# Log file
-*.log
+### IntelliJ IDEA ###
+*.iws
+*.iml
+*.ipr
+.idea/
+idea/
 
-# BlueJ files
-*.ctxt
+### eclipse ignore ###
+Servers/
+.settings/
+.metadata/
+.project
+.classpath
+.factorypath
+.externalToolBuilers/
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+### NetBeans ###
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
 
-# Package Files #
-*.jar
+### maven ignore ###
+bin/
+logs/
+target/
 *.war
-*.nar
-*.ear
 *.zip
+*.tar
 *.tar.gz
-*.rar
+.flattened-pom.xml
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+### gradle ignore ###
+.gradle
+
+### system ignore ###
+.DS_Store
+Thumbs.db
+
+### temp ignore ###
+*.log
+*.cache
+*.diff
+*.patch
+*.tmp
