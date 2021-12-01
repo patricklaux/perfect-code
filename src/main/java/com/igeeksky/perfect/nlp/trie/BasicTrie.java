@@ -46,9 +46,12 @@ public class BasicTrie<V> implements Trie<V> {
     @Override
     public V remove(String key) {
         BasicNode<V> node = find(key);
-        if (node == null) return null;
+        if (node == null) {
+            return null;
+        }
         V oldVal = node.val;
         if (oldVal != null) {
+            // 为了让代码更简单清晰，这里使用惰性删除，仅把对应的值置为空，并没有真正删除节点
             node.val = null;
             --size;
         }
@@ -68,8 +71,6 @@ public class BasicTrie<V> implements Trie<V> {
         return node;
     }
 
-
-
     @Override
     public Tuple2<String, V> prefixMatch(String word) {
         BasicNode<V> node = root;
@@ -88,29 +89,26 @@ public class BasicTrie<V> implements Trie<V> {
     }
 
     @Override
-    public Tuple2<String, V> keyWithPrefix(String prefix) {
-        BasicNode<V> node = find(prefix);
-        return (node == null) ? null : traversal(node, prefix, null);
+    public List<Tuple2<String, V>> keysWithPrefix(String prefix) {
+        List<Tuple2<String, V>> list = new LinkedList<>();
+        BasicNode<V> parent = find(prefix);
+        traversal(parent, prefix, list);
+        return list;
     }
 
-    private Tuple2<String, V> traversal(BasicNode<V> root, String prefix, Tuple2<String, V> tuple) {
-        for (int c = 0; c < R; c++) {
-            String key = prefix + (char) c;
-            BasicNode<V> node = root.next[c];
-            if (node != null) {
-                if (node.val != null) {
-                    if (tuple == null) {
-                        tuple = Tuples.of(key, node.val);
-                    } else {
-                        if (tuple.getT1().length() < key.length()) {
-                            tuple = tuple.mapT1((k) -> key).mapT2((v) -> node.val);
-                        }
-                    }
-                }
-                tuple = traversal(node, key, tuple);
+    // 深度优先遍历
+    private void traversal(BasicNode<V> parent, String prefix, List<Tuple2<String, V>> list) {
+        if (parent != null) {
+            if (parent.val != null) {
+                list.add(Tuples.of(prefix, parent.val));
+            }
+            for (int c = 0; c < R; c++) {
+                // 由于数组中可能存在大量空链接，因此遍历时可能会有很多无意义操作
+                String key = prefix + (char) c;
+                BasicNode<V> node = parent.next[c];
+                traversal(node, key, list);
             }
         }
-        return tuple;
     }
 
     @Override
@@ -155,6 +153,7 @@ public class BasicTrie<V> implements Trie<V> {
 
     /**
      * 朴素Trie节点
+     *
      * @param <V> 泛型，值类型
      */
     @SuppressWarnings("unchecked")

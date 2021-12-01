@@ -7,7 +7,6 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,15 +66,17 @@ public class BasicTrieTest {
     }
 
     @Test
-    public void keyWithPrefix() {
+    public void keysWithPrefix() {
         BasicTrie<String> trie = new BasicTrie<>();
+        trie.put("ab", "ab");
         trie.put("abc", "abc");
-        trie.put("abdd", "abdd");
-        trie.put("abed", "abed");
-        trie.put("abedd", "abedd");
-        Tuple2<String, String> tuple2 = trie.keyWithPrefix("ab");
-        System.out.println(tuple2);
-        Assert.assertEquals("abedd", tuple2.getT2());
+        trie.put("abcd", "abcd");
+        trie.put("abd", "abd");
+        trie.put("bcd", "bcd");
+        trie.put("cda", "cda");
+        List<Tuple2<String, String>> keysWithPrefix = trie.keysWithPrefix("ab");
+        System.out.println(keysWithPrefix);
+        Assert.assertEquals("[[ab, ab], [abc, abc], [abcd, abcd], [abd, abd]]", keysWithPrefix.toString());
     }
 
     @Test
@@ -97,32 +98,32 @@ public class BasicTrieTest {
     @Ignore
     public void performance() {
         BasicTrie<String> trie = new BasicTrie<>();
-        trie.put("abcdefghij", "abcdefghij");
+
+        String finalKey = "abcdefghij";
+        trie.put(finalKey, finalKey);
         Map<String, String> map = new HashMap<>();
-        map.put("abcdefghij", "abcdefghij");
-        int size = 500000000;
-        List<String> keys = new ArrayList<>(size);
+        map.put(finalKey, finalKey);
+
+        // 2亿次
+        int size = 200000000;
+        String[] array = new String[size];
         for (int i = 0; i < size; i++) {
-            keys.add(new String("abcdefghij"));
+            // 为了避免 String 缓存 hashcode，使得hashmap无需计算，导致性能对比不公平，重新生成相同的key
+            array[i] = new String(finalKey.toCharArray());
         }
 
         long t1 = System.currentTimeMillis();
-        for (String key : keys) {
+        for (String key : array) {
             trie.get(key);
         }
 
         long t2 = System.currentTimeMillis();
         System.out.println("trie-get:\t" + (t2 - t1));
 
-        for (String key : keys) {
+        for (String key : array) {
             map.get(key);
         }
         long t3 = System.currentTimeMillis();
         System.out.println(" map-get:\t" + (t3 - t2));
-    }
-
-    @Test
-    public void position(){
-        System.out.println((int)'a');
     }
 }

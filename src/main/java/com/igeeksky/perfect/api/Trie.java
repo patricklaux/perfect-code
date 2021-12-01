@@ -28,17 +28,17 @@ public interface Trie<V> extends BaseMap<String, V> {
     Tuple2<String, V> prefixMatch(String word);
 
     /**
-     * 前缀搜索：输入前缀，返回以此前缀开头的 key 及对应 value（默认最长匹配）
+     * 前缀搜索：输入前缀，返回以此前缀开头的所有 key 及对应 value（默认最长匹配）
      *
      * <pre>
      *     Trie中已有：ab, abc, abcd, abd, bcd
-     *     trie.keyWithPrefix("ab") == [abcd, abcd]；
+     *     trie.keysWithPrefix("ab") == [[ab, ab], [abc, abc], [abcd, abcd]]
      * </pre>
      *
      * @param prefix 前缀（不为空且长度大于0）
      * @return 所有包含给定前缀的 key 及对应 value
      */
-    Tuple2<String, V> keyWithPrefix(String prefix);
+    List<Tuple2<String, V>> keysWithPrefix(String prefix);
 
     /**
      * 包含匹配：输入一段文本，返回文本中包含的 key 及对应的 value 和 key 的起止位置
