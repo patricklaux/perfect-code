@@ -153,12 +153,22 @@ public class BasicTrie<V> implements Trie<V> {
         size = 0;
     }
 
+    /**
+     * 朴素Trie节点
+     * @param <V> 泛型，值类型
+     */
     @SuppressWarnings("unchecked")
     private static class BasicNode<V> {
 
-        protected V val;
-        protected BasicNode<V>[] next;
+        // 值（支持泛型，并不一定要是字符串）
+        V val;
 
+        // 子节点
+        BasicNode<V>[] next;
+
+        /**
+         * @param r 数组容量
+         */
         public BasicNode(int r) {
             this.next = new BasicNode[r];
         }

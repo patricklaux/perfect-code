@@ -120,4 +120,9 @@ public class BasicTrieTest {
         long t3 = System.currentTimeMillis();
         System.out.println(" map-get:\t" + (t3 - t2));
     }
+
+    @Test
+    public void position(){
+        System.out.println((int)'a');
+    }
 }
