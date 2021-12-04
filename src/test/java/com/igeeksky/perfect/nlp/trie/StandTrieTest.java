@@ -15,11 +15,11 @@ import java.util.Map;
  * @author Patrick.Lau
  * @since 1.0.0 2021-11-30
  */
-public class BasicTrieTest {
+public class StandTrieTest {
 
     @Test
     public void put() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
         String key = "abc";
         trie.put(key, key);
         String value = trie.get(key);
@@ -27,11 +27,14 @@ public class BasicTrieTest {
 
         value = trie.get("ab");
         Assert.assertNull(value);
+
+        value = trie.get("abcd");
+        Assert.assertNull(value);
     }
 
     @Test
     public void remove() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
         String key = "abc";
         trie.put(key, key);
         String value = trie.get(key);
@@ -46,7 +49,7 @@ public class BasicTrieTest {
 
     @Test
     public void size() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
         trie.put("abc", "abc");
         Assert.assertEquals(1, trie.size());
         trie.put("abc2", "abc2");
@@ -57,17 +60,18 @@ public class BasicTrieTest {
 
     @Test
     public void prefixMatch() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
         trie.put("abc", "abc");
         trie.put("abd", "abd");
         Tuple2<String, String> tuple2 = trie.prefixMatch("abcd");
-        System.out.println(tuple2);
         Assert.assertEquals("abc", tuple2.getT2());
+        tuple2 = trie.prefixMatch("bcd");
+        Assert.assertNull(tuple2);
     }
 
     @Test
     public void keysWithPrefix() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
         trie.put("ab", "ab");
         trie.put("abc", "abc");
         trie.put("abcd", "abcd");
@@ -75,19 +79,19 @@ public class BasicTrieTest {
         trie.put("bcd", "bcd");
         trie.put("cda", "cda");
         List<Tuple2<String, String>> keysWithPrefix = trie.keysWithPrefix("ab");
-        System.out.println(keysWithPrefix);
         Assert.assertEquals("[[ab, ab], [abc, abc], [abcd, abcd], [abd, abd]]", keysWithPrefix.toString());
+        keysWithPrefix = trie.keysWithPrefix("abcde");
+        Assert.assertEquals("[]", keysWithPrefix.toString());
     }
 
     @Test
     public void matchAll() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
         trie.put("abc", "abc");
         trie.put("abcd", "abcd");
         trie.put("bcd", "bcd");
         trie.put("abedd", "abedd");
         List<Found<String>> matchAll = trie.matchAll("xxabcdefxx");
-        System.out.println(matchAll);
         String expected = "[{\"start\":2, \"end\":4, \"key\":\"abc\", \"value\":\"abc\"},"
                 + " {\"start\":2, \"end\":5, \"key\":\"abcd\", \"value\":\"abcd\"},"
                 + " {\"start\":3, \"end\":5, \"key\":\"bcd\", \"value\":\"bcd\"}]";
@@ -97,9 +101,9 @@ public class BasicTrieTest {
     @Test
     @Ignore
     public void performance() {
-        BasicTrie<String> trie = new BasicTrie<>();
+        StandTrie<String> trie = new StandTrie<>();
 
-        String finalKey = "abcdefghij";
+        String finalKey = "aaaaaaaa";
         trie.put(finalKey, finalKey);
         Map<String, String> map = new HashMap<>();
         map.put(finalKey, finalKey);
@@ -123,6 +127,7 @@ public class BasicTrieTest {
         for (String key : array) {
             map.get(key);
         }
+
         long t3 = System.currentTimeMillis();
         System.out.println(" map-get:\t" + (t3 - t2));
     }
