@@ -87,14 +87,12 @@ public class StandTrieTest {
     @Test
     public void matchAll() {
         StandTrie<String> trie = new StandTrie<>();
-        trie.put("abc", "abc");
         trie.put("abcd", "abcd");
-        trie.put("bcd", "bcd");
-        trie.put("abedd", "abedd");
-        List<Found<String>> matchAll = trie.matchAll("xxabcdefxx");
-        String expected = "[{\"start\":2, \"end\":4, \"key\":\"abc\", \"value\":\"abc\"},"
-                + " {\"start\":2, \"end\":5, \"key\":\"abcd\", \"value\":\"abcd\"},"
-                + " {\"start\":3, \"end\":5, \"key\":\"bcd\", \"value\":\"bcd\"}]";
+        trie.put("bcdef", "bcdef");
+        trie.put("abe", "abe");
+        List<Found<String>> matchAll = trie.matchAll("abcdefg");
+
+        String expected = "[{\"start\":0, \"end\":3, \"key\":\"abcd\", \"value\":\"abcd\"}, {\"start\":1, \"end\":5, \"key\":\"bcdef\", \"value\":\"bcdef\"}]";
         Assert.assertEquals(expected, matchAll.toString());
     }
 
@@ -130,5 +128,15 @@ public class StandTrieTest {
 
         long t3 = System.currentTimeMillis();
         System.out.println(" map-get:\t" + (t3 - t2));
+    }
+
+    @Test
+    public void toBinaryString() {
+        String b = Integer.toBinaryString('你');
+        String c = Integer.toBinaryString('好');
+        System.out.println(b + " " + c);
+        System.out.println('你');
+        System.out.println(Integer.toBinaryString((0b1111111100000000 & '你') >> 8));
+        System.out.println(Integer.toBinaryString(0b0000000011111111 & '你'));
     }
 }

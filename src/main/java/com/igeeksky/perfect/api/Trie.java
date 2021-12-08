@@ -28,7 +28,7 @@ public interface Trie<V> extends BaseMap<String, V> {
     Tuple2<String, V> prefixMatch(String word);
 
     /**
-     * 前缀搜索：输入前缀，返回以此前缀开头的所有 key 及对应 value（默认最长匹配）
+     * 前缀搜索：输入前缀，返回以此前缀开头的所有 key 及关联的 value（默认最长匹配）
      *
      * <pre>
      *     Trie中已有：ab, abc, abcd, abd, bcd
@@ -36,14 +36,14 @@ public interface Trie<V> extends BaseMap<String, V> {
      * </pre>
      *
      * @param prefix 前缀（不为空且长度大于0）
-     * @return 所有包含给定前缀的 key 及对应 value
+     * @return 所有包含给定前缀的 key 及关联的 value
      */
     List<Tuple2<String, V>> keysWithPrefix(String prefix);
 
     /**
-     * 包含匹配：输入一段文本，返回文本中包含的 key 及对应的 value 和 key 的起止位置
+     * 包含匹配：输入一段文本，返回文本中包含的 key 及关联的 value 和 key 的起止位置
      * <p>
-     * 如果文本中包含有多个 key，那么将这些 keys 和 对应的 values 和 起止位置都返回
+     * 如果文本中包含有多个 key，那么将这些 keys 和 关联的 values 和 起止位置都返回
      *
      * <pre>
      *     例：
@@ -54,7 +54,7 @@ public interface Trie<V> extends BaseMap<String, V> {
      * </pre>
      *
      * @param text 文本段（不为空且长度大于0）
-     * @return 返回该文本中包含的所有 key 及对应 value、与及 key 的起止位置
+     * @return 返回该文本中包含的所有 key 及关联的 value、与及 key 的起止位置
      */
     List<Found<V>> matchAll(String text);
 }

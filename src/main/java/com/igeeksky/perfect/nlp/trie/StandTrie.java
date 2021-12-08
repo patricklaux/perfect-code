@@ -17,7 +17,7 @@ public class StandTrie<V> implements Trie<V> {
 
     private int size;
     private static final int R = 128;
-    private final TrieNode<V> root = new TrieNode<>(R);
+    private final StandardNode<V> root = new StandardNode<>(R);
 
     /**
      * 添加键值对
@@ -32,16 +32,16 @@ public class StandTrie<V> implements Trie<V> {
         if (len == 0) {
             return;
         }
-        TrieNode<V> node = root;
+        StandardNode<V> node = root;
         for (int i = 0; i < len; i++) {
-            if (node.next == null) {
+            if (node.table == null) {
                 // 小优化：只有添加子节点时才创建数组，即叶子节点无数组
-                node.next = new TrieNode[R];
+                node.table = new StandardNode[R];
             }
             char c = key.charAt(i);
-            TrieNode<V> child = node.next[c];
+            StandardNode<V> child = node.table[c];
             if (child == null) {
-                node.next[c] = (child = new TrieNode<>());
+                node.table[c] = (child = new StandardNode<>());
             }
             node = child;
         }
@@ -57,7 +57,7 @@ public class StandTrie<V> implements Trie<V> {
      */
     @Override
     public V get(String key) {
-        TrieNode<V> node = find(key);
+        StandardNode<V> node = find(key);
         return (node == null) ? null : node.val;
     }
 
@@ -66,13 +66,13 @@ public class StandTrie<V> implements Trie<V> {
      */
     @Override
     public V remove(String key) {
-        TrieNode<V> node = find(key);
+        StandardNode<V> node = find(key);
         if (node == null) {
             return null;
         }
         V oldVal = node.val;
         if (oldVal != null) {
-            // 为了让代码更简单清晰，这里使用惰性删除，仅把对应的值置为空，并没有真正删除节点
+            // 使用惰性删除：仅把关联的值置空，没有真正删除节点
             node.val = null;
             --size;
         }
@@ -85,18 +85,18 @@ public class StandTrie<V> implements Trie<V> {
      * @param key 键
      * @return key对应的节点
      */
-    private TrieNode<V> find(String key) {
+    private StandardNode<V> find(String key) {
         int len = key.length();
         if (len == 0) {
             return null;
         }
-        TrieNode<V> node = root;
+        StandardNode<V> node = root;
         for (int i = 0; i < len; i++) {
-            if (node.next == null) {
+            if (node.table == null) {
                 return null;
             }
             char c = key.charAt(i);
-            node = node.next[c];
+            node = node.table[c];
             if (node == null) {
                 return null;
             }
@@ -110,14 +110,14 @@ public class StandTrie<V> implements Trie<V> {
         if (len == 0) {
             return null;
         }
-        TrieNode<V> node = root;
+        StandardNode<V> node = root;
         Tuple2<String, V> tuple2 = null;
         for (int i = 0; i < len; i++) {
-            if (node.next == null) {
+            if (node.table == null) {
                 return tuple2;
             }
             char c = word.charAt(i);
-            node = node.next[c];
+            node = node.table[c];
             if (node == null) {
                 return tuple2;
             }
@@ -131,22 +131,22 @@ public class StandTrie<V> implements Trie<V> {
     @Override
     public List<Tuple2<String, V>> keysWithPrefix(String prefix) {
         List<Tuple2<String, V>> list = new LinkedList<>();
-        TrieNode<V> parent = find(prefix);
+        StandardNode<V> parent = find(prefix);
         traversal(parent, prefix, list);
         return list;
     }
 
-    private void traversal(TrieNode<V> parent, String prefix, List<Tuple2<String, V>> list) {
+    private void traversal(StandardNode<V> parent, String prefix, List<Tuple2<String, V>> list) {
         // 深度优先遍历
         if (parent != null) {
             if (parent.val != null) {
                 list.add(Tuples.of(prefix, parent.val));
             }
-            if (parent.next != null) {
+            if (parent.table != null) {
                 for (int c = 0; c < R; c++) {
                     // 由于数组中可能存在大量空链接，因此遍历时可能会有很多无意义操作
                     String key = prefix + (char) c;
-                    TrieNode<V> node = parent.next[c];
+                    StandardNode<V> node = parent.table[c];
                     traversal(node, key, list);
                 }
             }
@@ -164,13 +164,13 @@ public class StandTrie<V> implements Trie<V> {
     }
 
     private void matchAll(List<Found<V>> list, String text, int start, int end) {
-        TrieNode<V> node = root;
+        StandardNode<V> node = root;
         for (int i = start; i < end; i++) {
-            if (node.next == null) {
+            if (node.table == null) {
                 return;
             }
             char c = text.charAt(i);
-            node = node.next[c];
+            node = node.table[c];
             if (node == null) {
                 return;
             }
@@ -192,7 +192,7 @@ public class StandTrie<V> implements Trie<V> {
 
     @Override
     public void clear() {
-        Arrays.fill(root.next, null);
+        Arrays.fill(root.table, null);
         size = 0;
     }
 
@@ -202,19 +202,20 @@ public class StandTrie<V> implements Trie<V> {
      * @param <V> 泛型，值类型
      */
     @SuppressWarnings("unchecked")
-    private static class TrieNode<V> {
+    private static class StandardNode<V> {
 
-        // 值（支持泛型，并不一定要是字符串）
+        // 值（支持泛型，可以是非字符串）
         V val;
 
         // 子节点
-        TrieNode<V>[] next;
+        StandardNode<V>[] table;
 
-        public TrieNode() {
+        public StandardNode() {
         }
 
-        public TrieNode(int r) {
-            this.next = new TrieNode[r];
+        // r 为数组容量
+        public StandardNode(int R) {
+            this.table = new StandardNode[R];
         }
     }
 }
