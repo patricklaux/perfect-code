@@ -106,7 +106,7 @@ public class StandTrieTest {
     public void performance() {
         StandTrie<String> trie = new StandTrie<>();
 
-        String finalKey = "aaaaaaaa";
+        String finalKey = "abcdefghij";
         trie.put(finalKey, finalKey);
         Map<String, String> map = new HashMap<>();
         map.put(finalKey, finalKey);

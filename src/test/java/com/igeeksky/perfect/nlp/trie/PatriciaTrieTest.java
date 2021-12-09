@@ -107,7 +107,7 @@ public class PatriciaTrieTest {
 
     @Test
     public void matchAll() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
         trie.put("abcd", "abcd");
         trie.put("bcdef", "bcdef");
         trie.put("abe", "abe");
@@ -120,9 +120,9 @@ public class PatriciaTrieTest {
     @Test
     @Ignore
     public void performance() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
 
-        String finalKey = "aaaaaaaa";
+        String finalKey = "abcdefghij";
         trie.put(finalKey, finalKey);
         Map<String, String> map = new HashMap<>();
         map.put(finalKey, finalKey);
