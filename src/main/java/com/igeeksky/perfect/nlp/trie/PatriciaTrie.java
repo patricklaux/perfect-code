@@ -41,39 +41,40 @@ public class PatriciaTrie<V> implements Trie<V> {
                 ++size;
                 return;
             }
-            String segment = child.segment;
-            int childLast = segment.length() - 1;
-            // 查找分裂点
-            for (int j = 0; j <= childLast; j++, i++) {
-                if (segment.charAt(j) == key.charAt(i)) {
-                    if (j == childLast) {
-                        if (i == keyLast) {
+            String subKey = child.subKey;
+            int subLast = subKey.length() - 1;
+            // 与子节点进行字符比较
+            for (int j = 0; j <= subLast; j++, i++) {
+                if (subKey.charAt(j) == key.charAt(i)) {
+                    if (i == keyLast) {
+                        if (j == subLast) {
                             if (child.val == null) {
                                 ++size;
                             }
                             child.val = value;
-                            return;
                         } else {
-                            break;
+                            // 子节点分裂成两个节点，无新的分支节点
+                            PatriciaNode<V> child0 = new PatriciaNode<>(R, subKey.substring(0, j + 1), value);
+                            node.table[c] = child0;
+                            child.subKey = subKey.substring(j + 1);
+                            child0.table[child.subKey.charAt(0)] = child;
+                            ++size;
                         }
-                    }
-                    if (i == keyLast) {
-                        PatriciaNode<V> child0 = new PatriciaNode<>(R, segment.substring(0, j + 1), value);
-                        node.table[c] = child0;
-                        ++size;
-                        child.segment = segment.substring(j + 1);
-                        child0.table[child.segment.charAt(0)] = child;
                         return;
                     }
+                    if (j == subLast) {
+                        break;
+                    }
                 } else {
-                    PatriciaNode<V> child0 = new PatriciaNode<>(R, segment.substring(0, j));
+                    // 子节点分裂成两个节点，再加上新的分支节点
+                    PatriciaNode<V> child0 = new PatriciaNode<>(R, subKey.substring(0, j));
                     node.table[c] = child0;
 
-                    child.segment = segment.substring(j);
-                    child0.table[child.segment.charAt(0)] = child;
-
+                    child.subKey = subKey.substring(j);
+                    child0.table[child.subKey.charAt(0)] = child;
+                    // 新分支
                     PatriciaNode<V> child1 = new PatriciaNode<>(key.substring(i), value);
-                    child0.table[child1.segment.charAt(0)] = child1;
+                    child0.table[child1.subKey.charAt(0)] = child1;
                     ++size;
                     return;
                 }
@@ -95,12 +96,12 @@ public class PatriciaTrie<V> implements Trie<V> {
      * @return key对应的节点
      */
     private PatriciaNode<V> find(String key) {
-        int keyLast = key.length() - 1;
-        if (keyLast < 0) {
+        int last = key.length() - 1;
+        if (last < 0) {
             return null;
         }
         PatriciaNode<V> node = root;
-        for (int i = 0; i <= keyLast; i++) {
+        for (int i = 0; i <= last; i++) {
             if (node.table == null) {
                 return null;
             }
@@ -109,21 +110,20 @@ public class PatriciaTrie<V> implements Trie<V> {
             if (node == null) {
                 return null;
             }
-            String chars = node.segment;
-            int charsLast = chars.length() - 1;
-            for (int j = 0; j <= charsLast; j++, i++) {
-                if (chars.charAt(j) == key.charAt(i)) {
-                    if (j == charsLast) {
-                        if (i == keyLast) {
+            String subKey = node.subKey;
+            int subLast = subKey.length() - 1;
+            for (int j = 0; j <= subLast; j++, i++) {
+                if (subKey.charAt(j) == key.charAt(i)) {
+                    if (i == last) {
+                        if (j == subLast) {
                             return node;
                         }
+                        return null;
+                    }
+                    if (j == subLast) {
                         break;
                     }
-                    if (i == keyLast) {
-                        return null;
-                    } else {
-                        continue;
-                    }
+                    continue;
                 }
                 return null;
             }
@@ -139,7 +139,7 @@ public class PatriciaTrie<V> implements Trie<V> {
         }
         V oldVal = node.val;
         if (oldVal != null) {
-            // 使用惰性删除：仅把关联的值置空，没有真正删除节点
+            // 惰性删除：仅把关联的值置空，没有真正删除节点
             node.val = null;
             --size;
         }
@@ -163,11 +163,11 @@ public class PatriciaTrie<V> implements Trie<V> {
             if (node == null) {
                 return tuple2;
             }
-            String chars = node.segment;
-            int charsLast = chars.length() - 1;
-            for (int j = 0; j <= charsLast; j++, i++) {
-                if (chars.charAt(j) == word.charAt(i)) {
-                    if (j == charsLast) {
+            String subKey = node.subKey;
+            int subLast = subKey.length() - 1;
+            for (int j = 0; j <= subLast; j++, i++) {
+                if (subKey.charAt(j) == word.charAt(i)) {
+                    if (j == subLast) {
                         if (node.val != null) {
                             tuple2 = Tuples.of(word.substring(0, i + 1), node.val);
                         }
@@ -188,21 +188,24 @@ public class PatriciaTrie<V> implements Trie<V> {
     public List<Tuple2<String, V>> keysWithPrefix(String prefix) {
         List<Tuple2<String, V>> list = new LinkedList<>();
         PatriciaNode<V> parent = find(prefix);
+        if (parent == null) {
+            return list;
+        }
         traversal(parent, prefix, list);
         return list;
     }
 
     private void traversal(PatriciaNode<V> parent, String prefix, List<Tuple2<String, V>> list) {
         // 深度优先遍历
-        if (parent != null) {
-            if (parent.val != null) {
-                list.add(Tuples.of(prefix, parent.val));
-            }
-            if (parent.table != null) {
-                for (int c = 0; c < R; c++) {
-                    // 由于数组中可能存在大量空链接，因此遍历时可能会有很多无意义操作
-                    String key = prefix + (char) c;
-                    PatriciaNode<V> node = parent.table[c];
+        if (parent.val != null) {
+            list.add(Tuples.of(prefix, parent.val));
+        }
+        if (parent.table != null) {
+            for (int c = 0; c < R; c++) {
+                // 由于数组中可能存在大量空链接，因此遍历时可能会有很多无意义操作
+                PatriciaNode<V> node = parent.table[c];
+                if (node != null) {
+                    String key = prefix + node.subKey;
                     traversal(node, key, list);
                 }
             }
@@ -230,11 +233,11 @@ public class PatriciaTrie<V> implements Trie<V> {
             if (node == null) {
                 return;
             }
-            String chars = node.segment;
-            int charsLast = chars.length() - 1;
-            for (int j = 0; j <= charsLast; j++, i++) {
-                if (chars.charAt(j) == text.charAt(i)) {
-                    if (j == charsLast) {
+            String subKey = node.subKey;
+            int subLast = subKey.length() - 1;
+            for (int j = 0; j <= subLast; j++, i++) {
+                if (subKey.charAt(j) == text.charAt(i)) {
+                    if (j == subLast) {
                         if (node.val != null) {
                             list.add(new Found<>(start, i, text.substring(start, i + 1), node.val));
                         }
@@ -269,7 +272,7 @@ public class PatriciaTrie<V> implements Trie<V> {
     private static class PatriciaNode<V> {
 
         // key的其中一部分
-        String segment;
+        String subKey;
 
         // 值（支持泛型，可以是非字符串）
         V val;
@@ -281,18 +284,18 @@ public class PatriciaTrie<V> implements Trie<V> {
             this.table = new PatriciaNode[R];
         }
 
-        public PatriciaNode(int R, String segment) {
-            this.segment = segment;
+        public PatriciaNode(int R, String subKey) {
+            this.subKey = subKey;
             this.table = new PatriciaNode[R];
         }
 
-        public PatriciaNode(String segment, V value) {
-            this.segment = segment;
+        public PatriciaNode(String subKey, V value) {
+            this.subKey = subKey;
             this.val = value;
         }
 
-        public PatriciaNode(int R, String segment, V value) {
-            this.segment = segment;
+        public PatriciaNode(int R, String subKey, V value) {
+            this.subKey = subKey;
             this.val = value;
             this.table = new PatriciaNode[R];
         }
