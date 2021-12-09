@@ -13,28 +13,44 @@ import java.util.Map;
 
 /**
  * @author Patrick.Lau
- * @since 1.0.0 2021-11-30
+ * @since 1.0.0 2021-12-09
  */
-public class StandTrieTest {
+public class PatriciaTrieTest {
 
     @Test
     public void put() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
         String key = "abc";
         trie.put(key, key);
+
+        String key2 = "abcd";
+        trie.put(key2, key2);
+
+        String key3 = "abcdef";
+        trie.put(key3, key3);
+
+        String key4 = "abcdeg";
+        trie.put(key4, key4);
+
+        String key5 = "a";
+        trie.put(key5, key5);
+
+        String key6 = "abce";
+        trie.put(key6, key6);
+
         String value = trie.get(key);
         Assert.assertEquals(key, value);
 
         value = trie.get("ab");
         Assert.assertNull(value);
 
-        value = trie.get("abcd");
+        value = trie.get("abcde");
         Assert.assertNull(value);
     }
 
     @Test
     public void remove() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
         String key = "abc";
         trie.put(key, key);
         String value = trie.get(key);
@@ -49,7 +65,7 @@ public class StandTrieTest {
 
     @Test
     public void size() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
         trie.put("abc", "abc");
         Assert.assertEquals(1, trie.size());
 
@@ -65,7 +81,7 @@ public class StandTrieTest {
 
     @Test
     public void prefixMatch() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
         trie.put("abc", "abc");
         trie.put("abd", "abd");
         Tuple2<String, String> tuple2 = trie.prefixMatch("abcd");
@@ -76,7 +92,7 @@ public class StandTrieTest {
 
     @Test
     public void keysWithPrefix() {
-        StandTrie<String> trie = new StandTrie<>();
+        PatriciaTrie<String> trie = new PatriciaTrie<>();
         trie.put("ab", "ab");
         trie.put("abc", "abc");
         trie.put("abcd", "abcd");

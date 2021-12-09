@@ -16,7 +16,7 @@ import java.util.List;
 public class StandTrie<V> implements Trie<V> {
 
     private int size;
-    private static final int R = 128;
+    private static final int R = 65536;
     private final StandardNode<V> root = new StandardNode<>(R);
 
     /**
@@ -45,8 +45,10 @@ public class StandTrie<V> implements Trie<V> {
             }
             node = child;
         }
+        if (node.val == null) {
+            ++size;
+        }
         node.val = value;
-        ++size;
     }
 
     /**
