@@ -13,7 +13,7 @@ import java.util.List;
  * @author Patrick.Lau
  * @since 1.0.0 2021-11-30
  */
-public class StandTrie<V> implements Trie<V> {
+public class StandardTrie<V> implements Trie<V> {
 
     private int size;
     private static final int R = 65536;
@@ -52,7 +52,7 @@ public class StandTrie<V> implements Trie<V> {
     }
 
     /**
-     * 通过key获取值
+     * 获取键关联的值
      *
      * @param key 键
      * @return 值
@@ -64,7 +64,10 @@ public class StandTrie<V> implements Trie<V> {
     }
 
     /**
-     * 移除键值对
+     * 删除键值对（惰性删除）
+     *
+     * @param key 键
+     * @return 旧值
      */
     @Override
     public V remove(String key) {
@@ -82,10 +85,10 @@ public class StandTrie<V> implements Trie<V> {
     }
 
     /**
-     * 通过key查找节点
+     * 通过键查找节点
      *
      * @param key 键
-     * @return key对应的节点
+     * @return 键的对应节点
      */
     private StandardNode<V> find(String key) {
         int len = key.length();
@@ -132,24 +135,24 @@ public class StandTrie<V> implements Trie<V> {
 
     @Override
     public List<Tuple2<String, V>> keysWithPrefix(String prefix) {
-        List<Tuple2<String, V>> list = new LinkedList<>();
+        List<Tuple2<String, V>> results = new LinkedList<>();
         StandardNode<V> parent = find(prefix);
-        traversal(parent, prefix, list);
-        return list;
+        traversal(parent, prefix, results);
+        return results;
     }
 
-    private void traversal(StandardNode<V> parent, String prefix, List<Tuple2<String, V>> list) {
+    private void traversal(StandardNode<V> parent, String prefix, List<Tuple2<String, V>> results) {
         // 深度优先遍历
         if (parent != null) {
             if (parent.val != null) {
-                list.add(Tuples.of(prefix, parent.val));
+                results.add(Tuples.of(prefix, parent.val));
             }
             if (parent.table != null) {
                 for (int c = 0; c < R; c++) {
                     // 由于数组中可能存在大量空链接，因此遍历时可能会有很多无意义操作
                     String key = prefix + (char) c;
                     StandardNode<V> node = parent.table[c];
-                    traversal(node, key, list);
+                    traversal(node, key, results);
                 }
             }
         }

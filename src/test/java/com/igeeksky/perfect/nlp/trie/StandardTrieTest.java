@@ -15,11 +15,11 @@ import java.util.Map;
  * @author Patrick.Lau
  * @since 1.0.0 2021-11-30
  */
-public class StandTrieTest {
+public class StandardTrieTest {
 
     @Test
     public void put() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
         String key = "abc";
         trie.put(key, key);
         String value = trie.get(key);
@@ -34,7 +34,7 @@ public class StandTrieTest {
 
     @Test
     public void remove() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
         String key = "abc";
         trie.put(key, key);
         String value = trie.get(key);
@@ -49,7 +49,7 @@ public class StandTrieTest {
 
     @Test
     public void size() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
         trie.put("abc", "abc");
         Assert.assertEquals(1, trie.size());
 
@@ -65,7 +65,7 @@ public class StandTrieTest {
 
     @Test
     public void prefixMatch() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
         trie.put("abc", "abc");
         trie.put("abd", "abd");
         Tuple2<String, String> tuple2 = trie.prefixMatch("abcd");
@@ -76,7 +76,7 @@ public class StandTrieTest {
 
     @Test
     public void keysWithPrefix() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
         trie.put("ab", "ab");
         trie.put("abc", "abc");
         trie.put("abcd", "abcd");
@@ -91,7 +91,7 @@ public class StandTrieTest {
 
     @Test
     public void matchAll() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
         trie.put("abcd", "abcd");
         trie.put("bcdef", "bcdef");
         trie.put("abe", "abe");
@@ -104,7 +104,7 @@ public class StandTrieTest {
     @Test
     @Ignore
     public void performance() {
-        StandTrie<String> trie = new StandTrie<>();
+        StandardTrie<String> trie = new StandardTrie<>();
 
         String finalKey = "abcdefghij";
         trie.put(finalKey, finalKey);

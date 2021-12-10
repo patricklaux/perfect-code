@@ -7,9 +7,7 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Patrick.Lau
@@ -79,6 +77,9 @@ public class PatriciaTrieTest {
         Assert.assertEquals(1, trie.size());
     }
 
+    /**
+     * 查找输入字符串的最长前缀
+     */
     @Test
     public void prefixMatch() {
         PatriciaTrie<String> trie = new PatriciaTrie<>();
@@ -90,6 +91,9 @@ public class PatriciaTrieTest {
         Assert.assertNull(tuple2);
     }
 
+    /**
+     * 查找所有以给定字符串为前缀的key
+     */
     @Test
     public void keysWithPrefix() {
         PatriciaTrie<String> trie = new PatriciaTrie<>();
@@ -105,6 +109,9 @@ public class PatriciaTrieTest {
         Assert.assertEquals("[]", keysWithPrefix.toString());
     }
 
+    /**
+     * 查找给定文本段中包含的键
+     */
     @Test
     public void matchAll() {
         PatriciaTrie<String> trie = new PatriciaTrie<>();
@@ -120,44 +127,28 @@ public class PatriciaTrieTest {
     @Test
     @Ignore
     public void performance() {
-        PatriciaTrie<String> trie = new PatriciaTrie<>();
+        PatriciaTrie<String> patriciaTrie = new PatriciaTrie<>();
 
         String finalKey = "abcdefghij";
-        trie.put(finalKey, finalKey);
-        Map<String, String> map = new HashMap<>();
-        map.put(finalKey, finalKey);
+        patriciaTrie.put(finalKey, finalKey);
+        StandardTrie<String> standardTrie = new StandardTrie<>();
+        standardTrie.put(finalKey, finalKey);
 
         // 2亿次
         int size = 200000000;
-        String[] array = new String[size];
-        for (int i = 0; i < size; i++) {
-            // 为了避免 String 缓存 hashcode，使得hashmap无需计算，导致性能对比不公平，重新生成相同的key
-            array[i] = new String(finalKey.toCharArray());
-        }
-
         long t1 = System.currentTimeMillis();
-        for (String key : array) {
-            trie.get(key);
+        for (int i = 0; i < size; i++) {
+            patriciaTrie.get(finalKey);
         }
 
         long t2 = System.currentTimeMillis();
-        System.out.println("trie-get:\t" + (t2 - t1));
+        System.out.println("PatriciaTrie-get:\t" + (t2 - t1));
 
-        for (String key : array) {
-            map.get(key);
+        for (int i = 0; i < size; i++) {
+            standardTrie.get(finalKey);
         }
 
         long t3 = System.currentTimeMillis();
-        System.out.println(" map-get:\t" + (t3 - t2));
-    }
-
-    @Test
-    public void toBinaryString() {
-        String b = Integer.toBinaryString('你');
-        String c = Integer.toBinaryString('好');
-        System.out.println(b + " " + c);
-        System.out.println('你');
-        System.out.println(Integer.toBinaryString((0b1111111100000000 & '你') >> 8));
-        System.out.println(Integer.toBinaryString(0b0000000011111111 & '你'));
+        System.out.println("StandardTrie-get:\t" + (t3 - t2));
     }
 }

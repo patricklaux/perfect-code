@@ -20,21 +20,26 @@ public class PatriciaTrie<V> implements Trie<V> {
     private static final int R = 65536;
     private final PatriciaNode<V> root = new PatriciaNode<>(R);
 
+    /**
+     * 添加键值对
+     *
+     * @param key   键
+     * @param value 值
+     */
     @Override
     public void put(String key, V value) {
-        int keyLast = key.length() - 1;
-        if (keyLast < 0) {
+        int last = key.length() - 1;
+        if (last < 0) {
             return;
         }
         PatriciaNode<V> node = root;
-        for (int i = 0; i <= keyLast; i++) {
+        for (int i = 0; i <= last; i++) {
             char c = key.charAt(i);
+            // 判断数组是否为空，如果为空则创建数组
             if (node.table == null) {
                 node.table = new PatriciaNode[R];
-                node.table[c] = new PatriciaNode<>(key.substring(i), value);
-                ++size;
-                return;
             }
+            // 通过字符查找子节点，如果子节点不存在则创建子节点并返回，否则与子节点进行字符串比较
             PatriciaNode<V> child = node.table[c];
             if (child == null) {
                 node.table[c] = new PatriciaNode<>(key.substring(i), value);
@@ -43,17 +48,18 @@ public class PatriciaTrie<V> implements Trie<V> {
             }
             String subKey = child.subKey;
             int subLast = subKey.length() - 1;
-            // 与子节点进行字符比较
+            // 与子节点进行字符串比较
             for (int j = 0; j <= subLast; j++, i++) {
+                // 字符相同
                 if (subKey.charAt(j) == key.charAt(i)) {
-                    if (i == keyLast) {
+                    if (i == last) {
                         if (j == subLast) {
                             if (child.val == null) {
                                 ++size;
                             }
                             child.val = value;
                         } else {
-                            // 子节点分裂成两个节点，无新的分支节点
+                            // 子节点分裂成两个节点，无新的分支节点，例：原有 bcd，新增键bc ——> bc, d
                             PatriciaNode<V> child0 = new PatriciaNode<>(R, subKey.substring(0, j + 1), value);
                             node.table[c] = child0;
                             child.subKey = subKey.substring(j + 1);
@@ -66,7 +72,8 @@ public class PatriciaTrie<V> implements Trie<V> {
                         break;
                     }
                 } else {
-                    // 子节点分裂成两个节点，再加上新的分支节点
+                    // 字符不同
+                    // 子节点分裂成两个节点，再加上新的分支节点，例：原有 bcd，新增键 bca ——> bc, d, 新分支a
                     PatriciaNode<V> child0 = new PatriciaNode<>(R, subKey.substring(0, j));
                     node.table[c] = child0;
 
@@ -83,6 +90,12 @@ public class PatriciaTrie<V> implements Trie<V> {
         }
     }
 
+    /**
+     * 获取键关联的值
+     *
+     * @param key 键
+     * @return 值
+     */
     @Override
     public V get(String key) {
         PatriciaNode<V> node = find(key);
@@ -90,10 +103,10 @@ public class PatriciaTrie<V> implements Trie<V> {
     }
 
     /**
-     * 通过key查找节点
+     * 通过键查找节点
      *
      * @param key 键
-     * @return key对应的节点
+     * @return 键的对应节点
      */
     private PatriciaNode<V> find(String key) {
         int last = key.length() - 1;
@@ -102,12 +115,7 @@ public class PatriciaTrie<V> implements Trie<V> {
         }
         PatriciaNode<V> node = root;
         for (int i = 0; i <= last; i++) {
-            if (node.table == null) {
-                return null;
-            }
-            char c = key.charAt(i);
-            node = node.table[c];
-            if (node == null) {
+            if (node.table == null || (node = node.table[key.charAt(i)]) == null) {
                 return null;
             }
             String subKey = node.subKey;
@@ -131,6 +139,12 @@ public class PatriciaTrie<V> implements Trie<V> {
         return node;
     }
 
+    /**
+     * 删除键值对（惰性删除）
+     *
+     * @param key 键
+     * @return 旧值
+     */
     @Override
     public V remove(String key) {
         PatriciaNode<V> node = find(key);
@@ -146,6 +160,12 @@ public class PatriciaTrie<V> implements Trie<V> {
         return oldVal;
     }
 
+    /**
+     * 前缀匹配：查找 word 的最长前缀
+     *
+     * @param word 待匹配词（不为空且长度大于0）
+     * @return 键值对
+     */
     @Override
     public Tuple2<String, V> prefixMatch(String word) {
         int last = word.length() - 1;
@@ -155,12 +175,7 @@ public class PatriciaTrie<V> implements Trie<V> {
         PatriciaNode<V> node = root;
         Tuple2<String, V> tuple2 = null;
         for (int i = 0; i <= last; i++) {
-            if (node.table == null) {
-                return tuple2;
-            }
-            char c = word.charAt(i);
-            node = node.table[c];
-            if (node == null) {
+            if (node.table == null || (node = node.table[word.charAt(i)]) == null) {
                 return tuple2;
             }
             String subKey = node.subKey;
@@ -184,21 +199,33 @@ public class PatriciaTrie<V> implements Trie<V> {
         return tuple2;
     }
 
+    /**
+     * 查找并返回以 prefix 开头的所有键（及关联的值）
+     *
+     * @param prefix 前缀（不为空且长度大于0）
+     * @return 所有以 prefix 开头的键值对
+     */
     @Override
     public List<Tuple2<String, V>> keysWithPrefix(String prefix) {
-        List<Tuple2<String, V>> list = new LinkedList<>();
+        List<Tuple2<String, V>> results = new LinkedList<>();
         PatriciaNode<V> parent = find(prefix);
         if (parent == null) {
-            return list;
+            return results;
         }
-        traversal(parent, prefix, list);
-        return list;
+        traversal(parent, prefix, results);
+        return results;
     }
 
-    private void traversal(PatriciaNode<V> parent, String prefix, List<Tuple2<String, V>> list) {
-        // 深度优先遍历
+    /**
+     * 深度优先遍历，将所有以 prefix 开头的键值对添加到结果集
+     *
+     * @param parent  父节点
+     * @param prefix  前缀
+     * @param results 结果集
+     */
+    private void traversal(PatriciaNode<V> parent, String prefix, List<Tuple2<String, V>> results) {
         if (parent.val != null) {
-            list.add(Tuples.of(prefix, parent.val));
+            results.add(Tuples.of(prefix, parent.val));
         }
         if (parent.table != null) {
             for (int c = 0; c < R; c++) {
@@ -206,31 +233,40 @@ public class PatriciaTrie<V> implements Trie<V> {
                 PatriciaNode<V> node = parent.table[c];
                 if (node != null) {
                     String key = prefix + node.subKey;
-                    traversal(node, key, list);
+                    traversal(node, key, results);
                 }
             }
         }
     }
 
+    /**
+     * 查找给定文本段中包含的键
+     *
+     * @param text 文本段（不为空且长度大于0）
+     * @return 结果集（键、值、键在文本中的起止位置）
+     */
     @Override
     public List<Found<V>> matchAll(String text) {
-        List<Found<V>> list = new LinkedList<>();
+        List<Found<V>> results = new LinkedList<>();
         int last = text.length() - 1;
         for (int i = 0; i <= last; i++) {
-            matchAll(list, text, i, last);
+            matchAll(results, text, i, last);
         }
-        return list;
+        return results;
     }
 
-    private void matchAll(List<Found<V>> list, String text, int start, int last) {
+    /**
+     * 找到前缀节点后，遍历所有后缀节点，并将所有后缀节点包含的键值对添加到结果集
+     *
+     * @param results 结果集
+     * @param text    文本段
+     * @param start   文本段的开始位置
+     * @param last    文本段的结束位置（末尾）
+     */
+    private void matchAll(List<Found<V>> results, String text, int start, int last) {
         PatriciaNode<V> node = root;
         for (int i = start; i <= last; i++) {
-            if (node.table == null) {
-                return;
-            }
-            char c = text.charAt(i);
-            node = node.table[c];
-            if (node == null) {
+            if (node.table == null || (node = node.table[text.charAt(i)]) == null) {
                 return;
             }
             String subKey = node.subKey;
@@ -239,7 +275,7 @@ public class PatriciaTrie<V> implements Trie<V> {
                 if (subKey.charAt(j) == text.charAt(i)) {
                     if (j == subLast) {
                         if (node.val != null) {
-                            list.add(new Found<>(start, i, text.substring(start, i + 1), node.val));
+                            results.add(new Found<>(start, i, text.substring(start, i + 1), node.val));
                         }
                         break;
                     }
@@ -271,7 +307,7 @@ public class PatriciaTrie<V> implements Trie<V> {
 
     private static class PatriciaNode<V> {
 
-        // key的其中一部分
+        // key的一部分
         String subKey;
 
         // 值（支持泛型，可以是非字符串）
