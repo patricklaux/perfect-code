@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * @author Patrick.Lau
- * @since 0.0.4 2021-12-06
+ * @since 1.0.0 2021-12-06
  */
 public class TernarySearchTrie<V> implements Trie<V> {
 

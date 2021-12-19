@@ -14,7 +14,7 @@ public interface BaseMap<K, V> extends BaseCollection<V> {
      * @param key   键
      * @param value 值
      */
-    void put(K key, V value);
+    void put(K key, V value) throws InterruptedException;
 
     /**
      * 获取值
