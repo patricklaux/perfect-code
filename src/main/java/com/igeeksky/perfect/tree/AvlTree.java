@@ -2,6 +2,7 @@ package com.igeeksky.perfect.tree;
 
 
 import com.igeeksky.perfect.api.BaseMap;
+import com.igeeksky.xtool.core.lang.Assert;
 import com.igeeksky.xtool.core.math.IntegerValue;
 
 import java.util.Comparator;
@@ -14,7 +15,7 @@ import java.util.Map;
  * @since 1.0.0 2021-12-01
  */
 @SuppressWarnings("unchecked")
-public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
+public class AvlTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
     private static final int AVL_RIGHT_ROTATE_THRESHOLD = 2;
     private static final int AVL_LEFT_ROTATE_THRESHOLD = -2;
@@ -25,19 +26,25 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private final Comparator<K> comparator;
     private AvlNode<K, V> root = null;
 
-    public AvLTree() {
+    public AvlTree() {
         this.comparator = null;
     }
 
-    public AvLTree(Comparator<K> comparator) {
+    public AvlTree(Comparator<K> comparator) {
         this.comparator = comparator;
+    }
+
+    public AvlNode<K, V> getRoot() {
+        return root;
     }
 
     @Override
     public void put(K key, V value) {
+        Assert.notNull(key);
+        Assert.notNull(value);
         if (root == null) {
             root = new AvlNode<>(key, value);
-            size.increment();
+            size.set(1);
             return;
         }
 
@@ -52,6 +59,9 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 if (p.left == null) {
                     p.left = new AvlNode<>(key, value);
                     size.increment();
+                    if (p.right != null) {
+                        return; // 树结构未改变，无需回溯调整
+                    }
                     break;
                 } else {
                     p = p.left;
@@ -61,6 +71,9 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 if (p.right == null) {
                     p.right = new AvlNode<>(key, value);
                     size.increment();
+                    if (p.left != null) {
+                        return; // 树结构未改变，无需回溯调整
+                    }
                     break;
                 } else {
                     p = p.right;
@@ -68,93 +81,62 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 }
             } else {
                 p.val = value;
-                // 树结构未改变，无需回溯调整
-                return;
+                return; // 树结构未改变，无需回溯调整
             }
         }
-        retracing(path, depth);
+        backtrack(path, depth);
+        root = balance(root);
     }
 
     @Override
     public V get(K key) {
-        if (root == null) {
-            return null;
-        }
+        Assert.notNull(key);
         AvlNode<K, V> p = root;
-        while (true) {
+        while (p != null) {
             int cmp = compare(p.key, key);
             if (cmp > 0) {
-                if (p.left != null) {
-                    p = p.left;
-                } else {
-                    return null;
-                }
+                p = p.left;
             } else if (cmp < 0) {
-                if (p.right != null) {
-                    p = p.right;
-                } else {
-                    return null;
-                }
+                p = p.right;
             } else {
                 return p.val;
             }
         }
+        return null;
     }
 
     @Override
     public V remove(K key) {
+        Assert.notNull(key);
         if (root == null) {
             return null;
         }
-        int depth = 0, maxDepth = root.height + 1;
-        // 建立 根节点 至 删除节点之间的 回溯路径；因为父节点缺失，所以需要额外的数组来保存回溯路径
-        AvlNode<K, V>[] path = new AvlNode[maxDepth];
-        AvlNode<K, V> p = root, del = null;
-        int cmp = compare(p.key, key);
-        if (cmp == 0) {
-            V oldVal = root.val;
-            root = swap(root);
-            size.decrement();
-            return oldVal;
-        }
-
-        boolean isLeft = true;
-        for (; depth < maxDepth; depth++) {
-            path[depth] = p;
-            if (cmp > 0) {
-                if (p.left == null) {
-                    return null;
+        int depth = 0;
+        AvlNode<K, V> del = root;
+        // 根节点至删除节点之间的回溯路径
+        AvlNode<K, V>[] path = new AvlNode[root.height];
+        while (del != null) {
+            int cmp = compare(del.key, key);
+            if (cmp == 0) {
+                size.decrement();
+                if (root == del) {
+                    root = swap(root);
+                    return del.val;
                 }
-                cmp = compare(p.left.key, key);
-                if (cmp == 0) {
-                    del = p.left;
-                    break;
+                AvlNode<K, V> p = path[--depth];
+                if (p.right == del) {
+                    p.right = swap(del);
+                } else {
+                    p.left = swap(del);
                 }
-                p = p.left;
-            } else {
-                if (p.right == null) {
-                    return null;
-                }
-                cmp = compare(p.right.key, key);
-                if (cmp == 0) {
-                    del = p.right;
-                    isLeft = false;
-                    break;
-                }
-                p = p.right;
+                backtrack(path, depth);
+                root = balance(root);
+                return del.val;
             }
+            path[depth] = del;
+            del = (cmp > 0) ? del.left : del.right;
+            ++depth;
         }
-
-        // p 为删除节点的父节点
-        p = path[depth];
-        if (isLeft) {
-            p.left = swap(del);
-        } else {
-            p.right = swap(del);
-        }
-
-        retracing(path, depth);
-        root = balance(root);
         return null;
     }
 
@@ -173,74 +155,80 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     /**
-     * 使用左子树的最大节点（排序后的前驱节点） 替换 删除节点
+     * 使用左子树的最大节点替换删除节点
      *
      * @param del  待删除节点
-     * @param pred 前驱节点（左孩子）
-     * @return 与删除节点同位置的节点（可能为左子树的最大节点）
+     * @param swap 左孩子
+     * @return 替换后的节点（左子树的最大节点）
      */
-    private AvlNode<K, V> swapPredecessor(AvlNode<K, V> del, AvlNode<K, V> pred) {
+    private AvlNode<K, V> swapPredecessor(AvlNode<K, V> del, AvlNode<K, V> swap) {
         AvlNode<K, V>[] path = new AvlNode[del.height];
         int depth = 0;
-        while (pred.right != null) {
+        while (swap.right != null) {
             depth++;
-            path[depth] = pred;
-            pred = pred.right;
+            path[depth] = swap;
+            swap = swap.right;
         }
 
         if (depth > 0) {
-            AvlNode<K, V> parent = path[depth];
-            parent.right = pred.left;
-            pred.left = del.left;
+            AvlNode<K, V> p = path[depth];
+            p.right = swap.left;
+            swap.left = del.left;
         }
-        pred.right = del.right;
+        swap.right = del.right;
 
-        path[0] = pred;
-        retracing(path, depth);
-        return balance(pred);
+        path[0] = swap;
+        backtrack(path, depth);
+        return balance(swap);
     }
 
     /**
-     * 使用右子树的最小节点（排序后的后驱节点） 替换 删除节点
+     * 使用右子树的最小节点替换删除节点
      *
      * @param del  待删除节点
-     * @param succ 右孩子
-     * @return 与删除节点同位置的节点（可能为右子树的最小节点）
+     * @param swap 右孩子
+     * @return 替换后的节点（右子树的最大节点）
      */
-    private AvlNode<K, V> swapSuccessor(AvlNode<K, V> del, AvlNode<K, V> succ) {
+    private AvlNode<K, V> swapSuccessor(AvlNode<K, V> del, AvlNode<K, V> swap) {
         AvlNode<K, V>[] path = new AvlNode[del.height];
         int depth = 0;
-        while (succ.left != null) {
+        while (swap.left != null) {
             depth++;
-            path[depth] = succ;
-            succ = succ.left;
+            path[depth] = swap;
+            swap = swap.left;
         }
 
         if (depth > 0) {
             AvlNode<K, V> parent = path[depth];
-            parent.left = succ.right;
-            succ.right = del.right;
+            parent.left = swap.right;
+            swap.right = del.right;
         }
-        succ.left = del.left;
+        swap.left = del.left;
 
-        path[0] = succ;
-        retracing(path, depth);
-        return balance(succ);
+        path[0] = swap;
+        backtrack(path, depth);
+        return balance(swap);
     }
 
-    private void retracing(AvlNode<K, V>[] path, int depth) {
+    /**
+     * 回溯
+     *
+     * @param path  回溯路径
+     * @param depth 深度
+     */
+    private void backtrack(AvlNode<K, V>[] path, int depth) {
         for (int j = depth; j > 0; j--) {
             AvlNode<K, V> p = path[j];
-            int height = p.height;
             AvlNode<K, V> pp = path[j - 1];
+            int height = p.height;
+            updateHeight(p);
             if (pp.left == p) {
                 pp.left = balance(p);
             } else {
                 pp.right = balance(p);
             }
-            updateHeight(p);
-            // 高度不变，无需继续回溯
             if (p.height == height) {
+                // 高度不变，无需继续回溯
                 break;
             }
         }
@@ -268,7 +256,7 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         size.set(0);
     }
 
-    private static class AvlNode<K, V> implements Map.Entry<K, V> {
+    static class AvlNode<K, V> implements Map.Entry<K, V> {
         K key;
         V val;
         byte height;
@@ -293,6 +281,16 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         AvlNode(K key, V value) {
             this.key = key;
             this.val = value;
+        }
+
+        @Override
+        public String toString() {
+            return "{\"height\":" + height +
+                    ", \"key\":\"" + key + "\"" +
+                    //(null != val ? (", \"value\":\"" + val + "\"") : "") +
+                    ((null != left) ? (", \"left\":" + left) : "") +
+                    ((null != right) ? (", \"right\":" + right) : "") +
+                    "}";
         }
     }
 
@@ -335,14 +333,14 @@ public class AvLTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         return left;
     }
 
-    private AvlNode<K, V> rotateLeftRight(AvlNode<K, V> node) {
-        node.left = rotateLeft(node.left);
-        return rotateRight(node);
+    private AvlNode<K, V> rotateLeftRight(AvlNode<K, V> parent) {
+        parent.left = rotateLeft(parent.left);
+        return rotateRight(parent);
     }
 
-    private AvlNode<K, V> rotateRightLeft(AvlNode<K, V> node) {
-        node.right = rotateRight(node.right);
-        return rotateLeft(node);
+    private AvlNode<K, V> rotateRightLeft(AvlNode<K, V> parent) {
+        parent.right = rotateRight(parent.right);
+        return rotateLeft(parent);
     }
 
     private byte height(AvlNode<K, V> node) {
