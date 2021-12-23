@@ -10,3 +10,5 @@
 
 [PatriciaBinaryTrie](src/main/java/com/igeeksky/perfect/nlp/trie/PatriciaBinaryTrie.java)
 
+
+[AvlTree](src/main/java/com/igeeksky/perfect/tree/AvlTree.java)

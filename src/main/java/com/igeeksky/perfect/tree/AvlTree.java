@@ -176,10 +176,7 @@ public class AvlTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             swap.left = del.left;
         }
         swap.right = del.right;
-
-        path[0] = swap;
-        backtrack(path, depth);
-        return balance(swap);
+        return fixAfterDelete(swap, path, depth);
     }
 
     /**
@@ -204,7 +201,10 @@ public class AvlTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             swap.right = del.right;
         }
         swap.left = del.left;
+        return fixAfterDelete(swap, path, depth);
+    }
 
+    private AvlNode<K, V> fixAfterDelete(AvlNode<K, V> swap, AvlNode<K, V>[] path, int depth) {
         path[0] = swap;
         backtrack(path, depth);
         return balance(swap);
