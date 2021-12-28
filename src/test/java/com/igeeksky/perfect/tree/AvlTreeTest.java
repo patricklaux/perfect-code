@@ -1,5 +1,6 @@
 package com.igeeksky.perfect.tree;
 
+import com.igeeksky.xtool.core.function.tuple.Tuple2;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,62 +33,182 @@ public class AvlTreeTest {
     public void remove() {
         AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
 
-        String expected = "{\"height\":4, \"key\":\"p\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"left\":{\"height\":0, \"key\":\"a\"}, \"right\":{\"height\":0, \"key\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\"}}, \"right\":{\"height\":1, \"key\":\"n\", \"left\":{\"height\":0, \"key\":\"m\"}, \"right\":{\"height\":0, \"key\":\"o\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        String expected = "{\"height\":4, \"key\":\"p\", \"value\":\"p\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"value\":\"b\", \"left\":{\"height\":0, \"key\":\"a\", \"value\":\"a\"}, \"right\":{\"height\":0, \"key\":\"c\", \"value\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}, \"right\":{\"height\":1, \"key\":\"n\", \"value\":\"n\", \"left\":{\"height\":0, \"key\":\"m\", \"value\":\"m\"}, \"right\":{\"height\":0, \"key\":\"o\", \"value\":\"o\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(26, avl.size());
 
         avl.remove("a");
-        expected = "{\"height\":4, \"key\":\"p\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"right\":{\"height\":0, \"key\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\"}}, \"right\":{\"height\":1, \"key\":\"n\", \"left\":{\"height\":0, \"key\":\"m\"}, \"right\":{\"height\":0, \"key\":\"o\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"p\", \"value\":\"p\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"value\":\"b\", \"right\":{\"height\":0, \"key\":\"c\", \"value\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}, \"right\":{\"height\":1, \"key\":\"n\", \"value\":\"n\", \"left\":{\"height\":0, \"key\":\"m\", \"value\":\"m\"}, \"right\":{\"height\":0, \"key\":\"o\", \"value\":\"o\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(25, avl.size());
 
         avl.remove("p");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"right\":{\"height\":0, \"key\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\"}}, \"right\":{\"height\":1, \"key\":\"n\", \"left\":{\"height\":0, \"key\":\"m\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"value\":\"b\", \"right\":{\"height\":0, \"key\":\"c\", \"value\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}, \"right\":{\"height\":1, \"key\":\"n\", \"value\":\"n\", \"left\":{\"height\":0, \"key\":\"m\", \"value\":\"m\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(24, avl.size());
 
         avl.remove("n");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"right\":{\"height\":0, \"key\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\"}}, \"right\":{\"height\":0, \"key\":\"m\"}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"value\":\"b\", \"right\":{\"height\":0, \"key\":\"c\", \"value\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":1, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}, \"right\":{\"height\":0, \"key\":\"m\", \"value\":\"m\"}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(23, avl.size());
 
         avl.remove("m");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"right\":{\"height\":0, \"key\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":1, \"key\":\"l\", \"left\":{\"height\":0, \"key\":\"k\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":1, \"key\":\"b\", \"value\":\"b\", \"right\":{\"height\":0, \"key\":\"c\", \"value\":\"c\"}}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":1, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(22, avl.size());
 
         avl.remove("c");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":0, \"key\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":1, \"key\":\"l\", \"left\":{\"height\":0, \"key\":\"k\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":0, \"key\":\"b\", \"value\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":1, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(21, avl.size());
 
         // 重复删除
         avl.remove("c");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":0, \"key\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"j\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":1, \"key\":\"l\", \"left\":{\"height\":0, \"key\":\"k\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":0, \"key\":\"b\", \"value\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":2, \"key\":\"j\", \"value\":\"j\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":1, \"key\":\"l\", \"value\":\"l\", \"left\":{\"height\":0, \"key\":\"k\", \"value\":\"k\"}}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(21, avl.size());
 
         avl.remove("j");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":0, \"key\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\"}}}, \"right\":{\"height\":3, \"key\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"left\":{\"height\":0, \"key\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":0, \"key\":\"b\", \"value\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"value\":\"k\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\", \"value\":\"l\"}}}, \"right\":{\"height\":3, \"key\":\"t\", \"value\":\"t\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":0, \"key\":\"u\", \"value\":\"u\"}, \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(20, avl.size());
 
         avl.remove("t");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":0, \"key\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\"}}}, \"right\":{\"height\":3, \"key\":\"u\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"right\":{\"height\":0, \"key\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":0, \"key\":\"b\", \"value\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"value\":\"k\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\", \"value\":\"l\"}}}, \"right\":{\"height\":3, \"key\":\"u\", \"value\":\"u\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":1, \"key\":\"v\", \"value\":\"v\", \"right\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(19, avl.size());
 
         avl.remove("u");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":0, \"key\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\"}}}, \"right\":{\"height\":3, \"key\":\"v\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"left\":{\"height\":0, \"key\":\"w\"}, \"right\":{\"height\":1, \"key\":\"y\", \"right\":{\"height\":0, \"key\":\"z\"}}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":0, \"key\":\"b\", \"value\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"value\":\"k\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\", \"value\":\"l\"}}}, \"right\":{\"height\":3, \"key\":\"v\", \"value\":\"v\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":2, \"key\":\"x\", \"value\":\"x\", \"left\":{\"height\":0, \"key\":\"w\", \"value\":\"w\"}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(18, avl.size());
 
         avl.remove("v");
-        expected = "{\"height\":4, \"key\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"left\":{\"height\":0, \"key\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"left\":{\"height\":0, \"key\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"left\":{\"height\":0, \"key\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\"}}}, \"right\":{\"height\":2, \"key\":\"w\", \"left\":{\"height\":1, \"key\":\"r\", \"left\":{\"height\":0, \"key\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"left\":{\"height\":0, \"key\":\"x\"}, \"right\":{\"height\":0, \"key\":\"z\"}}}}";
+        expected = "{\"height\":4, \"key\":\"o\", \"value\":\"o\", \"left\":{\"height\":3, \"key\":\"h\", \"value\":\"h\", \"left\":{\"height\":2, \"key\":\"d\", \"value\":\"d\", \"left\":{\"height\":0, \"key\":\"b\", \"value\":\"b\"}, \"right\":{\"height\":1, \"key\":\"f\", \"value\":\"f\", \"left\":{\"height\":0, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"height\":0, \"key\":\"g\", \"value\":\"g\"}}}, \"right\":{\"height\":1, \"key\":\"k\", \"value\":\"k\", \"left\":{\"height\":0, \"key\":\"i\", \"value\":\"i\"}, \"right\":{\"height\":0, \"key\":\"l\", \"value\":\"l\"}}}, \"right\":{\"height\":2, \"key\":\"w\", \"value\":\"w\", \"left\":{\"height\":1, \"key\":\"r\", \"value\":\"r\", \"left\":{\"height\":0, \"key\":\"q\", \"value\":\"q\"}, \"right\":{\"height\":0, \"key\":\"s\", \"value\":\"s\"}}, \"right\":{\"height\":1, \"key\":\"y\", \"value\":\"y\", \"left\":{\"height\":0, \"key\":\"x\", \"value\":\"x\"}, \"right\":{\"height\":0, \"key\":\"z\", \"value\":\"z\"}}}}";
         Assert.assertEquals(expected, avl.getRoot().toString());
         Assert.assertEquals(17, avl.size());
+    }
 
-        System.out.println(avl.getRoot());
+    @Test
+    public void preorderTraversalR() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.preorderTraversalR(list);
+        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
+    }
+
+    @Test
+    public void inorderTraversalR() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.inorderTraversalR(list);
+        checkResults(list, "abcdefghijklmnopqrstuvwxyz");
+    }
+
+    @Test
+    public void postorderTraversalR() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.postorderTraversalR(list);
+        checkResults(list, "acbegfdikjmonlhqsruwvzyxtp");
+    }
+
+    @Test
+    public void preorderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.preorderTraversal(list);
+        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
+    }
+
+    @Test
+    public void inorderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.inorderTraversal(list);
+        checkResults(list, "abcdefghijklmnopqrstuvwxyz");
+    }
+
+    @Test
+    public void postOrderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> results = new ArrayList<>(26);
+        avl.postOrderTraversal(results);
+        checkResults(results, "acbegfdikjmonlhqsruwvzyxtp");
+    }
+
+    @Test
+    public void postOrderTraversal1() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> results = new ArrayList<>(26);
+        avl.postOrderTraversal1(results);
+        checkResults(results, "acbegfdikjmonlhqsruwvzyxtp");
+    }
+
+    @Test
+    public void levelOrderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.levelOrderTraversal(list);
+        checkResults(list, "phtdlrxbfjnqsvyacegikmouwz");
+    }
+
+    @Test
+    public void morrisPreorderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.morrisPreorderTraversal(list);
+        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
+    }
+
+    @Test
+    public void morrisInorderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.morrisInorderTraversal(list);
+        checkResults(list, "abcdefghijklmnopqrstuvwxyz");
+    }
+
+    @Test
+    public void morrisPostorderTraversal() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> results = new ArrayList<>(26);
+        avl.morrisPostorderTraversal(results);
+        checkResults(results, "acbegfdikjmonlhqsruwvzyxtp");
+    }
+
+    @Test
+    public void iddfsPlus() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.iddfsPlus(list, false);
+        checkResults(list, "phtdlrxbfjnqsvyacegikmouwz");
+
+        list.clear();
+        avl.iddfsPlus(list, true);
+        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
+    }
+
+    @Test
+    public void iddfsPlus2() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.iddfsPlus(list, 4);
+        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
+    }
+
+    @Test
+    public void iddfsR() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.iddfsR(list, 4);
+        checkResults(list, "phtdlrxbfjnqsvyacegikmouwz");
+    }
+
+    private void checkResults(List<Tuple2<String, String>> list, String abcdefghijklmnopqrstuvwxyz) {
+        StringBuilder builder = new StringBuilder(26);
+        list.forEach(t -> builder.append(t.getT1()));
+        Assert.assertEquals(abcdefghijklmnopqrstuvwxyz, builder.toString());
     }
 
     private AvlTree<String, String> createTree(String text) {
