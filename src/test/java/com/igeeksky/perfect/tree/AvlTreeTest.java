@@ -130,18 +130,18 @@ public class AvlTreeTest {
     }
 
     @Test
-    public void postOrderTraversal() {
+    public void postorderTraversal() {
         AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
         List<Tuple2<String, String>> results = new ArrayList<>(26);
-        avl.postOrderTraversal(results);
+        avl.postorderTraversal(results);
         checkResults(results, "acbegfdikjmonlhqsruwvzyxtp");
     }
 
     @Test
-    public void postOrderTraversal1() {
+    public void postorderTraversal1() {
         AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
         List<Tuple2<String, String>> results = new ArrayList<>(26);
-        avl.postOrderTraversal1(results);
+        avl.postorderTraversal1(results);
         checkResults(results, "acbegfdikjmonlhqsruwvzyxtp");
     }
 

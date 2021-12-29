@@ -238,7 +238,7 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         }
     }
 
-    public void postOrderTraversal(List<Tuple2<K, V>> kvs) {
+    public void postorderTraversal(List<Tuple2<K, V>> kvs) {
         if (root == null) {
             return;
         }
@@ -262,35 +262,30 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         }
     }
 
-    private String to(Stack<Node<K, V>> stack) {
-        //System.out.println("p=" + (null != p ? p.key : "") + "\tprev=" + (null != prev ? prev.key : "") + "\tstack:" + to(stack));
-        Object[] objects = stack.toArray();
-        StringJoiner joiner = new StringJoiner(",");
-        for (Object node : objects) {
-            if (null != node) {
-                joiner.add(((Node<K, V>) node).key.toString());
-            }
-        }
-        return joiner.toString();
-    }
-
-    public void postOrderTraversal1(List<Tuple2<K, V>> kvs) {
+    public void postorderTraversal1(List<Tuple2<K, V>> kvs) {
         if (root == null) {
             return;
         }
         Stack<Tuple2<Node<K, V>, Integer>> stack = new Stack<>();
+        // 1.压入根节点，初始状态为 0
         stack.push(Tuples.of(root, 0));
         while (!stack.isEmpty()) {
+            // 2.弹出栈顶元素
             Tuple2<Node<K, V>, Integer> tuple = stack.pop();
+            // 3.判断状态
             Node<K, V> p = tuple.getT1();
             if (tuple.getT2() == 1) {
+                // 3.1. 如果状态为 1，表示已经遍历右子树，添加键值到结果集（访问节点）
                 kvs.add(Tuples.of(p.key, p.val));
             } else {
+                // 3.1. 如果状态为 0，表示还未遍历右子树，改变状态为 1 并重新入栈
                 stack.push(tuple.mapT2(t2 -> 1));
                 if (p.right != null) {
+                    // 3.2.右孩子先入栈，初始状态为 0
                     stack.push(Tuples.of(p.right, 0));
                 }
                 if (p.left != null) {
+                    // 3.3.左孩子后入栈，初始状态为 0
                     stack.push(Tuples.of(p.left, 0));
                 }
             }
