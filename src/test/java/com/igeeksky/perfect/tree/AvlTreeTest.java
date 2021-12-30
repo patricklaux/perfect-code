@@ -178,31 +178,27 @@ public class AvlTreeTest {
     }
 
     @Test
-    public void iddfsPlus() {
+    public void iddfs() {
         AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
         List<Tuple2<String, String>> list = new ArrayList<>(26);
-        avl.iddfsPlus(list, false);
+        avl.iddfs(list);
         checkResults(list, "phtdlrxbfjnqsvyacegikmouwz");
-
-        list.clear();
-        avl.iddfsPlus(list, true);
-        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
-    }
-
-    @Test
-    public void iddfsPlus2() {
-        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
-        List<Tuple2<String, String>> list = new ArrayList<>(26);
-        avl.iddfsPlus(list, 4);
-        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
     }
 
     @Test
     public void iddfsR() {
         AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
         List<Tuple2<String, String>> list = new ArrayList<>(26);
-        avl.iddfsR(list, 4);
+        avl.iddfsR(list);
         checkResults(list, "phtdlrxbfjnqsvyacegikmouwz");
+    }
+
+    @Test
+    public void limitDfs() {
+        AvlTree<String, String> avl = createTree("abcdefghijklmnopqrstuvwxyz");
+        List<Tuple2<String, String>> list = new ArrayList<>(26);
+        avl.depthLimitSearch(list, 4);
+        checkResults(list, "phdbacfegljiknmotrqsxvuwyz");
     }
 
     private void checkResults(List<Tuple2<String, String>> list, String abcdefghijklmnopqrstuvwxyz) {

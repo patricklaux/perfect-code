@@ -292,28 +292,6 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         }
     }
 
-    /**
-     * 层序遍历（队列实现）（广度优先遍历）
-     *
-     * @param kvs 用于保存所有的键值对
-     */
-    public void levelOrderTraversal(List<Tuple2<K, V>> kvs) {
-        if (root == null) {
-            return;
-        }
-        ArrayDeque<Node<K, V>> queue = new ArrayDeque<>(size.get());
-        queue.push(root);
-        while (!queue.isEmpty()) {
-            Node<K, V> p = queue.poll();
-            kvs.add(Tuples.of(p.key, p.val));
-            if (p.left != null) {
-                queue.offer(p.left);
-            }
-            if (p.right != null) {
-                queue.offer(p.right);
-            }
-        }
-    }
 
     public void morrisPreorderTraversal(List<Tuple2<K, V>> kvs) {
         Node<K, V> p = root, pred;
@@ -341,20 +319,30 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
     public void morrisInorderTraversal(List<Tuple2<K, V>> kvs) {
         Node<K, V> p = root, pred;
         while (p != null) {
+            // 1. 判断左孩子是否为空
+            // 1.1. 左孩子不为空，需要遍历左子树
             if (p.left != null) {
+                // 2.查找前驱节点
                 pred = p.left;
                 while (pred.right != null && pred.right != p) {
                     pred = pred.right;
                 }
+                // 3.判断前驱节点的右孩子是否为空
+                // 3.1. 前驱节点的右孩子为空，表示第一次经过该节点（还未遍历左子树）
                 if (pred.right == null) {
                     pred.right = p;
                     p = p.left;
-                    continue;
+                } else {
+                    // 3.2. 前驱节点的右孩子不为空，表示第二次经过该节点（已经遍历左子树）
+                    kvs.add(Tuples.of(p.key, p.val));
+                    pred.right = null;
+                    p = p.right;
                 }
-                pred.right = null;
+            } else {
+                // 1.2. 左孩子为空，无需遍历左子树，访问当前节点的值
+                kvs.add(Tuples.of(p.key, p.val));
+                p = p.right;
             }
-            kvs.add(Tuples.of(p.key, p.val));
-            p = p.right;
         }
     }
 
@@ -416,53 +404,64 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
     }
 
     /**
+     * 层序遍历（队列实现）（广度优先遍历）
+     *
      * @param kvs 用于保存所有的键值对
-     * @param dfs 是否深度优先遍历：是，深度优先遍历（先序遍历）；否：广度优先遍历（层序遍历）
      */
-    public void iddfsPlus(List<Tuple2<K, V>> kvs, boolean dfs) {
+    public void levelOrderTraversal(List<Tuple2<K, V>> kvs) {
         if (root == null) {
             return;
         }
-        kvs.add(Tuples.of(root.key, root.val));
-        if (dfs) {
-            iddfsPlus(kvs, root.height, true);
-            return;
-        }
-        for (int depth = 1; depth <= root.height; depth++) {
-            if (!iddfsPlus(kvs, depth, false)) {
-                return;
+        ArrayDeque<Node<K, V>> queue = new ArrayDeque<>(size.get());
+        queue.push(root);
+        while (!queue.isEmpty()) {
+            Node<K, V> p = queue.poll();
+            kvs.add(Tuples.of(p.key, p.val));
+            if (p.left != null) {
+                queue.offer(p.left);
+            }
+            if (p.right != null) {
+                queue.offer(p.right);
             }
         }
     }
 
     /**
-     * 游标
+     * @param kvs 用于保存所有的键值对
+     */
+    public void iddfs(List<Tuple2<K, V>> kvs) {
+        if (root == null) {
+            return;
+        }
+        kvs.add(Tuples.of(root.key, root.val));
+        int depth = 0;
+        while (iddfs(kvs, depth)) {
+            depth++;
+        }
+    }
+
+    /**
+     * 层序遍历
      *
      * @param kvs 用于保存所有的键值对
      */
-    private boolean iddfsPlus(List<Tuple2<K, V>> kvs, int depth, boolean dfs) {
-        int threshold = depth - 1, curDep = 0;
+    private boolean iddfs(List<Tuple2<K, V>> kvs, int depth) {
+        int curDep = 0;
         boolean remaining = false;
-        Node<K, V>[] path = new Node[depth];
+        Node<K, V>[] path = new Node[depth + 1];
         path[0] = root;
         while (curDep >= 0) {
             Node<K, V> p = path[curDep];
-            if (curDep < threshold) {
+            if (curDep < depth) {
                 Node<K, V> ch = path[curDep + 1];
                 if (p.left != null && p.left != ch) {
                     if (p.right != ch) {
                         path[++curDep] = p.left;
-                        if (dfs) {
-                            kvs.add(Tuples.of(p.left.key, p.left.val));
-                        }
                         continue;
                     }
                 }
                 if (p.right != null && p.right != ch) {
                     path[++curDep] = p.right;
-                    if (dfs) {
-                        kvs.add(Tuples.of(p.right.key, p.right.val));
-                    }
                     continue;
                 }
             } else {
@@ -480,11 +479,50 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
     }
 
     /**
-     * 深度优先
+     * 递归 IDDFS（层序遍历）
      *
      * @param kvs 用于保存所有的键值对
      */
-    public void iddfsPlus(List<Tuple2<K, V>> kvs, int maxDep) {
+    public void iddfsR(List<Tuple2<K, V>> kvs) {
+        if (root == null) {
+            return;
+        }
+        int depth = 0;
+        while (dlsR(kvs, root, depth)) {
+            ++depth;
+        }
+    }
+
+    private boolean dlsR(List<Tuple2<K, V>> kvs, Node<K, V> node, int depth) {
+        // 1.是否到达指定层
+        if (depth == 0) {
+            // 1.1.depth为0，到达指定层，访问节点
+            kvs.add(Tuples.of(node.key, node.val));
+            // 指定层存在，总是返回 true
+            return true;
+        } else {
+            // 1.2 depth>0，未到指定层，继续递归
+            // 指定层是否存在（左子树或右子树存在指定层即返回 true）
+            boolean remaining = false;
+            // 2.1. 左子树继续递归（每次进入下一层，depth-1）
+            if (null != node.left && dlsR(kvs, node.left, depth - 1)) {
+                remaining = true;
+            }
+            // 2.2. 右子树继续递归（每次进入下一层，depth-1）
+            if (null != node.right && dlsR(kvs, node.right, depth - 1)) {
+                remaining = true;
+            }
+            // 返回指定层是否存在
+            return remaining;
+        }
+    }
+
+    /**
+     * 限制深度的深度优先搜索（DLS）
+     *
+     * @param kvs 用于保存所有的键值对
+     */
+    public void depthLimitSearch(List<Tuple2<K, V>> kvs, int maxDep) {
         Assert.isTrue(maxDep >= 0);
         Node<K, V>[] path = new Node[maxDep + 1];
         int curDep = 0;
@@ -508,55 +546,6 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
                 }
             }
             --curDep;
-        }
-    }
-
-    /**
-     * 递归 IDDFS（层序遍历）
-     *
-     * @param kvs 用于保存所有的键值对
-     */
-    public void iddfsR(List<Tuple2<K, V>> kvs, int maxDep) {
-        Assert.isTrue(maxDep >= 0);
-        if (root == null) {
-            return;
-        }
-        for (int i = 0; i <= maxDep; i++) {
-            if (!dls2(kvs, root, 0, i)) {
-                break;
-            }
-        }
-    }
-
-    private boolean dls(List<Tuple2<K, V>> kvs, Node<K, V> node, int depth) {
-        if (depth == 0) {
-            kvs.add(Tuples.of(node.key, node.val));
-            return true;
-        } else {
-            boolean remaining = false;
-            if (null != node.left && dls(kvs, node.left, depth - 1)) {
-                remaining = true;
-            }
-            if (null != node.right && dls(kvs, node.right, depth - 1)) {
-                remaining = true;
-            }
-            return remaining;
-        }
-    }
-
-    private boolean dls2(List<Tuple2<K, V>> kvs, Node<K, V> node, int curDep, int limitDep) {
-        if (curDep < limitDep) {
-            boolean remaining = false;
-            if (null != node.left && dls2(kvs, node.left, curDep + 1, limitDep)) {
-                remaining = true;
-            }
-            if (null != node.right && dls2(kvs, node.right, curDep + 1, limitDep)) {
-                remaining = true;
-            }
-            return remaining;
-        } else {
-            kvs.add(Tuples.of(node.key, node.val));
-            return true;
         }
     }
 }
