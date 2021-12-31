@@ -412,7 +412,7 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         if (root == null) {
             return;
         }
-        ArrayDeque<Node<K, V>> queue = new ArrayDeque<>(size.get());
+        ArrayDeque<Node<K, V>> queue = new ArrayDeque<>(size.get() / 2);
         queue.push(root);
         while (!queue.isEmpty()) {
             Node<K, V> p = queue.poll();
@@ -433,10 +433,9 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         if (root == null) {
             return;
         }
-        kvs.add(Tuples.of(root.key, root.val));
         int depth = 0;
-        while (iddfs(kvs, depth)) {
-            depth++;
+        while (dls(kvs, depth)) {
+            ++depth;
         }
     }
 
@@ -445,11 +444,11 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
      *
      * @param kvs 用于保存所有的键值对
      */
-    private boolean iddfs(List<Tuple2<K, V>> kvs, int depth) {
-        int curDep = 0;
-        boolean remaining = false;
+    private boolean dls(List<Tuple2<K, V>> kvs, int depth) {
         Node<K, V>[] path = new Node[depth + 1];
+        int curDep = 0;
         path[0] = root;
+        boolean remaining = false;
         while (curDep >= 0) {
             Node<K, V> p = path[curDep];
             if (curDep < depth) {
@@ -466,12 +465,7 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
                 }
             } else {
                 remaining = true;
-                if (p.left != null) {
-                    kvs.add(Tuples.of(p.left.key, p.left.val));
-                }
-                if (p.right != null) {
-                    kvs.add(Tuples.of(p.right.key, p.right.val));
-                }
+                kvs.add(Tuples.of(p.key, p.val));
             }
             --curDep;
         }
