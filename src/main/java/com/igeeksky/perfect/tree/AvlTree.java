@@ -14,15 +14,6 @@ import java.util.Comparator;
 @SuppressWarnings("unchecked")
 public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> {
 
-    // 右旋阈值
-    private static final int AVL_RIGHT_ROTATE_THRESHOLD = 2;
-    // 左旋阈值
-    private static final int AVL_LEFT_ROTATE_THRESHOLD = -2;
-    // 右斜
-    private static final int AVL_RIGHT_SLANT = -1;
-    // 左斜
-    private static final int AVL_LEFT_SLANT = 1;
-
     public AvlTree() {
         super(null);
     }
@@ -43,7 +34,7 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
 
         Node<K, V> p = root;
         int depth = 0, maxDepth = root.height + 1;
-        // 存储回溯路径
+        // 回溯路径
         Node<K, V>[] path = new Node[maxDepth];
         while (depth < maxDepth) {
             path[depth] = p;
@@ -53,7 +44,7 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
                     p.left = new Node<>(key, value);
                     size.increment();
                     if (p.right != null) {
-                        return; // 树结构未改变，无需回溯调整
+                        return; // 父节点高度不变，无需回溯调整
                     }
                     break;
                 } else {
@@ -65,7 +56,7 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
                     p.right = new Node<>(key, value);
                     size.increment();
                     if (p.left != null) {
-                        return; // 树结构未改变，无需回溯调整
+                        return; // 父节点高度不变，无需回溯调整
                     }
                     break;
                 } else {
@@ -77,8 +68,7 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
                 return; // 树结构未改变，无需回溯调整
             }
         }
-        backtrack(path, depth);
-        root = balance(root);
+        root = backtrack(path, depth);
     }
 
     @Override
@@ -105,8 +95,7 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
                 } else {
                     p.left = swap(del);
                 }
-                backtrack(path, depth);
-                root = balance(root);
+                root = backtrack(path, depth);
                 return del.val;
             }
             path[depth] = del;
@@ -120,24 +109,25 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
         Node<K, V> pl = del.left, pr = del.right;
         if (height(pl) >= height(pr)) {
             if (pl != null) {
-                // 查找左子树最大节点并交换删除节点
+                // 左子树的高度大于等于右子树：前驱节点交换删除节点
                 return swapPredecessor(del, pl);
             }
             //没有子节点
             return null;
         }
-        // 查找右子树最小节点并交换删除节点
+        // 右子树的高度大于左子树：后继节点交换删除节点
         return swapSuccessor(del, pr);
     }
 
     /**
-     * 使用左子树的最大节点替换删除节点
+     * 被删除节点 与其 前驱节点 交换位置
      *
      * @param del  待删除节点
      * @param swap 左孩子
-     * @return 替换后的节点（左子树的最大节点）
+     * @return 前驱节点
      */
     private Node<K, V> swapPredecessor(Node<K, V> del, Node<K, V> swap) {
+        // 回溯路径
         Node<K, V>[] path = new Node[del.height];
         int depth = 0;
         while (swap.right != null) {
@@ -152,17 +142,20 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
             swap.left = del.left;
         }
         swap.right = del.right;
-        return fixAfterDelete(swap, path, depth);
+        path[0] = swap;
+        // 回溯调整
+        return backtrack(path, depth);
     }
 
     /**
-     * 使用右子树的最小节点替换删除节点
+     * 被删除节点 与其 后继节点 交换位置
      *
      * @param del  待删除节点
      * @param swap 右孩子
-     * @return 替换后的节点（右子树的最大节点）
+     * @return 后继节点
      */
     private Node<K, V> swapSuccessor(Node<K, V> del, Node<K, V> swap) {
+        // 回溯路径
         Node<K, V>[] path = new Node[del.height];
         int depth = 0;
         while (swap.left != null) {
@@ -177,13 +170,9 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
             swap.right = del.right;
         }
         swap.left = del.left;
-        return fixAfterDelete(swap, path, depth);
-    }
-
-    private Node<K, V> fixAfterDelete(Node<K, V> swap, Node<K, V>[] path, int depth) {
         path[0] = swap;
-        backtrack(path, depth);
-        return balance(swap);
+        // 回溯
+        return backtrack(path, depth);
     }
 
     /**
@@ -192,36 +181,42 @@ public class AvlTree<K extends Comparable<K>, V> extends BinarySearchTree<K, V> 
      * @param path  回溯路径
      * @param depth 深度
      */
-    private void backtrack(Node<K, V>[] path, int depth) {
+    private Node<K, V> backtrack(Node<K, V>[] path, int depth) {
         for (int j = depth; j > 0; j--) {
             Node<K, V> p = path[j];
             Node<K, V> pp = path[j - 1];
-            int height = p.height;
+            int height = p.height, newHeight;
             updateHeight(p);
             if (pp.left == p) {
                 pp.left = balance(p);
+                newHeight = pp.left.height;
             } else {
                 pp.right = balance(p);
+                newHeight = pp.right.height;
             }
-            if (p.height == height) {
-                // 高度不变，无需继续回溯
-                break;
+            if (newHeight == height) {
+                break;  // 高度不变，停止回溯
             }
         }
         updateHeight(path[0]);
+        return balance(path[0]);
     }
 
     private Node<K, V> balance(Node<K, V> parent) {
         int factor = balanceFactor(parent);
-        if (factor >= AVL_RIGHT_ROTATE_THRESHOLD) {
-            if (balanceFactor(parent.left) <= AVL_RIGHT_SLANT) {
+        if (factor >= 2) {
+            if (balanceFactor(parent.left) <= -1) {
+                // LR(2, -1)：先左旋后右旋
                 return rotateLeftRight(parent);
             }
+            // LL(2, 1) 或 L(2, 0)：右旋
             return rotateRight(parent);
-        } else if (factor <= AVL_LEFT_ROTATE_THRESHOLD) {
-            if (balanceFactor(parent.right) >= AVL_LEFT_SLANT) {
+        } else if (factor <= -2) {
+            if (balanceFactor(parent.right) >= 1) {
+                // RL(-2, 1)：先右旋后左旋
                 return rotateRightLeft(parent);
             }
+            // RR(-2, -1) 或 R(-2, 0)：左旋
             return rotateLeft(parent);
         } else {
             return parent;
