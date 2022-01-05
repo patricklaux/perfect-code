@@ -46,11 +46,6 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
     }
 
     @Override
-    public V remove(K key) {
-        return null;
-    }
-
-    @Override
     public int size() {
         return size.get();
     }
@@ -74,8 +69,8 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         K key;
         V val;
         byte height;
-        AvlTree.Node<K, V> left;
-        AvlTree.Node<K, V> right;
+        Node<K, V> left;
+        Node<K, V> right;
 
         @Override
         public K getKey() {
