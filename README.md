@@ -12,3 +12,6 @@
 
 
 [AvlTree](src/main/java/com/igeeksky/perfect/tree/AvlTree.java)
+
+
+[BTree](src/main/java/com/igeeksky/perfect/tree/BTree.java)
