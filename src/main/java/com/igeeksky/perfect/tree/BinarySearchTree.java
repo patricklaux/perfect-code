@@ -61,8 +61,9 @@ public abstract class BinarySearchTree<K extends Comparable<K>, V> implements Ba
         root = null;
     }
 
-    public Node<K, V> getRoot() {
-        return root;
+    @Override
+    public String toString() {
+        return root.toString();
     }
 
     static class Node<K, V> implements Map.Entry<K, V> {
