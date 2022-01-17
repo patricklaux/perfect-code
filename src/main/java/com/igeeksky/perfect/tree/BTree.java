@@ -251,36 +251,35 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * @param x 叶子节点
      */
     private void solveUnderflow(Node<K, V> x) {
-        if (x.size >= middle) {
-            return;
-        }
-        // 1. 旋转
-        Node<K, V> p = x.parent;
-        if (p == null) {
-            return;
-        }
-        int pos = position(p, x);
-        if (pos > 0) {
-            Node<K, V> sl = p.children[pos - 1];
-            if (sl.size > middle) {
-                rotateRight(p, x, sl, pos);
+        while (x.size < middle) {
+            // 1. 旋转
+            Node<K, V> p = x.parent;
+            if (p == null) {
                 return;
             }
-        }
-        if (pos < p.size) {
-            Node<K, V> sr = p.children[pos + 1];
-            if (sr.size > middle) {
-                rotateLeft(p, x, sr, pos);
-                return;
+            int pos = position(p, x);
+            if (pos > 0) {
+                Node<K, V> sl = p.children[pos - 1];
+                if (sl.size > middle) {
+                    rotateRight(p, x, sl, pos);
+                    return;
+                }
             }
+            if (pos < p.size) {
+                Node<K, V> sr = p.children[pos + 1];
+                if (sr.size > middle) {
+                    rotateLeft(p, x, sr, pos);
+                    return;
+                }
+            }
+            // 2. 合并
+            if (pos > 0) {
+                mergeLeft(p, x, p.children[pos - 1], pos);
+            } else {
+                mergeRight(p, x, p.children[pos + 1], pos);
+            }
+            x = p;
         }
-        // 2. 合并
-        if (pos > 0) {
-            mergeLeft(p, x, p.children[pos - 1], pos);
-        } else {
-            mergeRight(p, x, p.children[pos + 1], pos);
-        }
-        solveUnderflow(p);
     }
 
     void rotateRight(Node<K, V> p, Node<K, V> x, Node<K, V> sl, int pos) {
