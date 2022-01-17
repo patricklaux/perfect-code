@@ -50,7 +50,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         int pos = tuple2.getT1();
         Node<K, V> x = tuple2.getT2();
         if (pos >= 0) {
-            x.items[pos] = Pairs.of(key, value);
+            x.setItem(pos, Pairs.of(key, value));
             return;
         }
         size.increment();
@@ -275,7 +275,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             }
         }
         // 2. 合并
-        if (pos >= middle) {
+        if (pos > 0) {
             mergeLeft(p, x, p.children[pos - 1], pos);
         } else {
             mergeRight(p, x, p.children[pos + 1], pos);
@@ -380,38 +380,41 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
         void addItem(int pos, Pair<K, V> item) {
             // 元素右移腾出空位
-            if (pos < size) {
+            if (pos < items.length - 1) {
                 System.arraycopy(items, pos, items, pos + 1, size - pos);
             }
             setItem(pos, item);
+            size++;
         }
 
         void setItem(int pos, Pair<K, V> item) {
             items[pos] = item;
-            size++;
         }
 
         void deleteItem(int pos) {
-            if (pos < size - 1) {
+            if (pos < items.length - 1) {
                 System.arraycopy(items, pos + 1, items, pos, size - 1 - pos);
-                items[items.length - 1] = null;
+                items[size - 1] = null;
             } else {
                 items[pos] = null;
             }
             size--;
         }
 
-        void addChild(int index, Node<K, V> ch) {
+        void addChild(int pos, Node<K, V> ch) {
             // 元素右移腾出空位
-            int lastIndex = items.length;
-            if (index < lastIndex) {
-                System.arraycopy(children, index, children, index + 1, lastIndex - index);
+            int last = children.length - 1;
+            if (pos < last) {
+                System.arraycopy(children, pos, children, pos + 1, last - pos);
             }
-            setChild(index, ch);
+            setChild(pos, ch);
         }
 
         Node<K, V> setChild(int index, Node<K, V> ch) {
-            this.children[index] = ch.setParent(this);
+            this.children[index] = ch;
+            if (ch != null) {
+                ch.setParent(this);
+            }
             return this;
         }
 
@@ -432,6 +435,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         void merge(Node<K, V> s) {
             System.arraycopy(s.items, 0, this.items, size, s.size);
             System.arraycopy(s.children, 0, this.children, size, s.size + 1);
+            size += s.size;
         }
 
         boolean isLeaf() {
@@ -448,7 +452,8 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         @Override
         public String toString() {
             return "{" +
-                    "\"items\":" + arrayToString(items) +
+                    "\"size\":" + size +
+                    ", \"items\":" + arrayToString(items) +
                     (isLeaf() ? "" : ", \"children\":" + arrayToString(children)) +
                     "}";
         }
