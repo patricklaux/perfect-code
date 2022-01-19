@@ -26,19 +26,8 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
     @Override
     public V get(K key) {
-        Assert.notNull(key);
-        Node<K, V> p = root;
-        while (p != null) {
-            int cmp = compare(p.key, key);
-            if (cmp > 0) {
-                p = p.left;
-            } else if (cmp < 0) {
-                p = p.right;
-            } else {
-                return p.val;
-            }
-        }
-        return null;
+        Node<K, V> p = search(key);
+        return (p == null) ? null : p.val;
     }
 
     @Override
@@ -77,6 +66,22 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
     }
 
+    private Node<K, V> search(K key) {
+        Assert.notNull(key);
+        Node<K, V> p = root;
+        while (p != null) {
+            int cmp = compare(p.key, key);
+            if (cmp > 0) {
+                p = p.left;
+            } else if (cmp < 0) {
+                p = p.right;
+            } else {
+                return p;
+            }
+        }
+        return null;
+    }
+
     /**
      * 插入节点后变色和旋转，使得其符合红黑树的性质
      *
@@ -85,11 +90,11 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private void fixAfterInsertion(Node<K, V> x) {
         // 1. 情形2：父节点是黑色，无需任何调整
         // 2. 父节点是红色
-        while (x.parent.red) {
+        while (x.parent.red == RED) {
             Node<K, V> p = x.parent;
             Node<K, V> g = p.parent;
             Node<K, V> u = (p == g.left) ? g.right : g.left;
-            if (u == null || !u.red) {
+            if (isBlack(u)) {
                 // 2.1. 情形3：父节点是红色，叔节点是黑色（或叔节点不存在）
                 g.red = RED;
                 if (x == p.left) {
@@ -126,11 +131,142 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
     @Override
     public V remove(K key) {
-        return null;
+        Node<K, V> x = search(key);
+        if (x == null) {
+            return null;
+        }
+        V oldVal = x.val;
+        delete(x);
+        return oldVal;
+    }
+
+    private void delete(Node<K, V> x) {
+        size.decrement();
+        // 是否有两个孩子
+        if (x.left != null && x.right != null) {
+            // 交换节点
+            x = swap(x);
+        }
+        Node<K, V> r = x.left != null ? x.left : x.right;
+        if (x.parent == null) {
+            root = r;
+            if (r != null) {
+                r.red = BLACK;
+            }
+            return;
+        }
+        if (r == null) {
+            if (x.red == BLACK) {
+                fixAfterDeletion(x);
+            }
+            transplant(x, null);
+        } else {
+            transplant(x, r);
+            if (x.red == BLACK) {
+                fixAfterDeletion(r);
+            }
+        }
+    }
+
+    private void transplant(Node<K, V> x, Node<K, V> r) {
+        Node<K, V> p = x.parent;
+        x.parent = x.left = x.right = null;
+        if (r != null) r.parent = p;
+        if (x == p.left) {
+            p.left = r;
+        } else {
+            p.right = r;
+        }
     }
 
     private void fixAfterDeletion(Node<K, V> x) {
+        while (x != root && isBlack(x)) {
+            if (x == x.parent.left) {
+                Node<K, V> s = x.parent.right;
+                if (s.red == RED) {
+                    setColor(s, BLACK);
+                    setColor(x.parent, RED);
+                    rotateLeft(x.parent);
+                    s = x.parent.right;
+                }
+                if (isBlack(s.left) && isBlack(s.right)) {
+                    setColor(s, RED);
+                    x = x.parent;
+                } else {
+                    if (isBlack(s.right)) {
+                        setColor(s.left, BLACK);
+                        setColor(s, RED);
+                        rotateRight(s);
+                        s = x.parent.right;
+                    }
+                    setColor(s, x.parent.red);
+                    setColor(x.parent, BLACK);
+                    setColor(s.right, BLACK);
+                    rotateLeft(x.parent);
+                    x = root;
+                }
+            } else {
+                Node<K, V> s = x.parent.left;
+                if (s.red == RED) {
+                    setColor(s, BLACK);
+                    setColor(x.parent, RED);
+                    rotateRight(x.parent);
+                    s = x.parent.left;
+                }
+                if (isBlack(s.left) && isBlack(s.right)) {
+                    setColor(s, RED);
+                    x = x.parent;
+                } else {
+                    if (isBlack(s.left)) {
+                        setColor(s.right, BLACK);
+                        setColor(s, RED);
+                        rotateLeft(s);
+                        s = x.parent.left;
+                    }
+                    setColor(s, x.parent.red);
+                    setColor(x.parent, BLACK);
+                    setColor(s.left, BLACK);
+                    rotateRight(x.parent);
+                    x = root;
+                }
+            }
+        }
+        setColor(x, BLACK);
+    }
 
+    private boolean isRed(Node<K, V> n) {
+        return n != null && n.red == RED;
+    }
+
+    private boolean isBlack(Node<K, V> n) {
+        return n == null || n.red == BLACK;
+    }
+
+    private void setColor(Node<K, V> n, boolean red) {
+        if (n != null) n.red = red;
+    }
+
+    private Node<K, V> swap(Node<K, V> x) {
+        Node<K, V> s = swapPredecessor(x);
+        x.key = s.key;
+        x.val = s.val;
+        return s;
+    }
+
+    private Node<K, V> swapPredecessor(Node<K, V> x) {
+        Node<K, V> s = x.left;
+        while (s.right != null) {
+            s = s.right;
+        }
+        return s;
+    }
+
+    private Node<K, V> swapSuccessor(Node<K, V> x) {
+        Node<K, V> s = x.right;
+        while (s.left != null) {
+            s = s.left;
+        }
+        return s;
     }
 
     @Override
