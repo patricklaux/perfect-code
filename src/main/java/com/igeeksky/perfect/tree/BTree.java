@@ -19,8 +19,8 @@ import java.util.Objects;
 @SuppressWarnings("unchecked")
 public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
-    private final int order;
-    private final int middle;
+    private final int maxOrder;
+    private final int median;
     private final int maxElement;
     private final Comparator<K> comparator;
     private final IntegerValue size = new IntegerValue();
@@ -31,8 +31,9 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     public BTree(int order, Comparator<K> comparator) {
-        this.order = order;
-        this.middle = (order - 1) / 2;
+        // 预留 1个空位用于处理上溢
+        this.maxOrder = order + 1;
+        this.median = Math.round((float) order / 2) - 1;
         this.maxElement = order - 1;
         this.comparator = comparator;
     }
@@ -42,7 +43,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         Assert.notNull(key);
         Assert.notNull(value);
         if (root == null) {
-            root = new Node<>(order, key, value);
+            root = new Node<>(maxOrder, Pairs.of(key, value));
             size.increment();
             return;
         }
@@ -50,39 +51,29 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         int pos = tuple2.getT1();
         Node<K, V> x = tuple2.getT2();
         if (pos >= 0) {
+            // 1. 当前节点已存在该Key
             x.setItem(pos, Pairs.of(key, value));
             return;
         }
         size.increment();
-        // 无上溢问题，直接添加键值对
-        if (x.size < maxElement) {
-            x.addItem(findPosition(x, key), key, value);
-            return;
-        }
         // 解决上溢问题
-        solveOverflow(x, key, value);
+        solveOverflow(x, Pairs.of(key, value));
     }
 
-    private void solveOverflow(Node<K, V> x, K key, V value) {
-        Node<K, V> t = createTempNode(x, key, value);
-        while (true) {
+    private void solveOverflow(Node<K, V> x, Pair<K, V> item) {
+        x.addItem(findPosition(x, item.getKey()), item);
+        while (x.size > maxElement) {
             Node<K, V> p = x.parent;
             // 2. 当前节点为 root
-            Pair<K, V> item = t.items[middle];
+            item = x.items[median];
+            int pos = 0;
             if (p == null) {
-                root = new Node<>(order, item);
-                split(root, t, 0);
-                return;
+                root = p = new Node<>(maxOrder);
+            } else {
+                pos = findPosition(p, item.getKey());
             }
-            // 3. 父节点可以容纳上溢的键值对
-            if (p.size < maxElement) {
-                int pos = findPosition(p, item.getKey());
-                p.addItem(pos, item.getKey(), item.getValue());
-                split(p, t, pos);
-                return;
-            }
-            // 4. 父节点无法容纳上溢的键值对
-            t = createTempNode(p, t);
+            p.addItem(pos, item);
+            split(p, x, pos);
             x = p;
         }
     }
@@ -91,70 +82,30 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * 上溢节点分裂为两个节点
      *
      * @param p   父节点
-     * @param t   上溢生成的临时节点
+     * @param x   上溢生成的临时节点
      * @param pos 索引位置
      */
-    private void split(Node<K, V> p, Node<K, V> t, int pos) {
-        Node<K, V> lc = new Node<K, V>(order).setItems(t, 0, middle);
-        Node<K, V> rc = new Node<K, V>(order).setItems(t, middle + 1, maxElement - middle);
+    private void split(Node<K, V> p, Node<K, V> x, int pos) {
+        Node<K, V> lc = new Node<K, V>(maxOrder).setItems(x, 0, median);
+        Node<K, V> rc = new Node<K, V>(maxOrder).setItems(x, median + 1, maxElement - median);
         p.setChild(pos, lc).addChild(pos + 1, rc);
     }
 
-    /**
-     * 上溢的叶子节点 生成 临时节点
-     *
-     * @param x     叶子节点
-     * @param key   键
-     * @param value 值
-     * @return 临时节点
-     */
-    private Node<K, V> createTempNode(Node<K, V> x, K key, V value) {
-        int index = findPosition(x, key);
-        Node<K, V> temp = new Node<>(order + 1);
-        if (index > 0) {
-            System.arraycopy(x.items, 0, temp.items, 0, index);
-        }
-        temp.items[index] = Pairs.of(key, value);
-        if (index < maxElement) {
-            System.arraycopy(x.items, index, temp.items, index + 1, maxElement - index);
-        }
-        return temp;
-    }
-
-    /**
-     * 非叶节点无法容纳上溢的键，创建新的临时节点
-     *
-     * @param p 父节点
-     * @param t 临时节点
-     * @return 新的临时节点
-     */
-    private Node<K, V> createTempNode(Node<K, V> p, Node<K, V> t) {
-        Pair<K, V> item = t.items[middle];
-        int pos = findPosition(p, item.getKey());
-        Node<K, V> temp = new Node<>(order + 1);
-        if (pos > 0) {
-            System.arraycopy(p.items, 0, temp.items, 0, pos);
-            System.arraycopy(p.children, 0, temp.children, 0, pos);
-        }
-        temp.items[pos] = item;
-        temp.children[pos] = new Node<K, V>(order).setItems(t, 0, middle).setParent(p);
-        temp.children[pos + 1] = new Node<K, V>(order).setItems(t, middle + 1, maxElement - middle).setParent(p);
-        if (pos < maxElement) {
-            System.arraycopy(p.items, pos, temp.items, pos + 1, maxElement - pos);
-            System.arraycopy(p.children, pos + 1, temp.children, pos + 2, maxElement - pos);
-        }
-        return temp;
-    }
-
     private int findPosition(Node<K, V> x, K key) {
-        Pair<K, V>[] items = x.items;
-        for (int i = 0; i < maxElement; i++) {
-            Pair<K, V> item = items[i];
-            if (item == null || compare(item.getKey(), key) > 0) {
-                return i;
+        int m = x.size / 2, upper = x.size, lower = 0;
+        while (m >= lower && m < upper) {
+            int cmp = compare(x.items[m].getKey(), key);
+            if (cmp > 0) {
+                upper = m;
+                m = m - Math.round((float) (m - lower) / 2);
+            } else if (cmp < 0) {
+                lower = m;
+                m = m + Math.round((float) (upper - m) / 2);
+            } else {
+                return m;
             }
         }
-        return maxElement;
+        return m;
     }
 
     @Override
@@ -167,7 +118,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     /**
-     * 查找键所在的节点 及 键在该节点的索引位置
+     * 查找键所在的节点 及 键在该节点的索引位置（二分查找）
      *
      * @param key 键
      * @return 返回二元组：1.索引位置(-1表示该节点不包含该键)；2.节点
@@ -175,35 +126,23 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private Tuple2<Integer, Node<K, V>> search(K key) {
         Node<K, V> p = root;
         while (true) {
-            if (p.isLeaf()) {
-                for (int i = 0; i < p.size; i++) {
-                    Pair<K, V> item = p.items[i];
-                    if (null == item) {
-                        return Tuples.of(-1, p);
-                    }
-                    int cmp = compare(item.getKey(), key);
-                    if (cmp > 0) {
-                        return Tuples.of(-1, p);
-                    } else if (cmp == 0) {
-                        return Tuples.of(i, p);
-                    }
+            int m = p.size / 2, upper = p.size, lower = 0;
+            while (m >= lower && m < upper) {
+                int cmp = compare(p.items[m].getKey(), key);
+                if (cmp > 0) {
+                    upper = m;
+                    m = m - Math.round((float) (m - lower) / 2);
+                } else if (cmp < 0) {
+                    lower = m;
+                    m = m + Math.round((float) (upper - m) / 2);
+                } else {
+                    return Tuples.of(m, p);
                 }
+            }
+            if (p.isLowestLevel()) {
                 return Tuples.of(-1, p);
             }
-            for (int i = 0; i <= p.size; i++) {
-                if (i == p.size) {
-                    p = p.children[i];
-                    break;
-                }
-                int cmp = compare(p.items[i].getKey(), key);
-                if (cmp > 0) {
-                    p = p.children[i];
-                    break;
-                }
-                if (cmp == 0) {
-                    return Tuples.of(i, p);
-                }
-            }
+            p = p.children[m];
         }
     }
 
@@ -218,7 +157,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         size.decrement();
         Node<K, V> x = tuple2.getT2();
         V oldVal = x.items[pos].getValue();
-        if (x.isLeaf()) {
+        if (x.isLowestLevel()) {
             x.deleteItem(pos);
         } else {
             x = swap(x, pos);
@@ -236,7 +175,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      */
     private Node<K, V> swap(Node<K, V> x, int pos) {
         Node<K, V> pred = x.children[pos];
-        while (!pred.isLeaf()) {
+        while (!pred.isLowestLevel()) {
             pred = pred.children[pred.size];
         }
         int swapIndex = pred.size - 1;
@@ -251,7 +190,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * @param x 叶子节点
      */
     private void solveUnderflow(Node<K, V> x) {
-        while (x.size < middle) {
+        while (x.size < median) {
             // 1. 旋转
             Node<K, V> p = x.parent;
             if (p == null) {
@@ -260,14 +199,14 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             int pos = position(p, x);
             if (pos > 0) {
                 Node<K, V> sl = p.children[pos - 1];
-                if (sl.size > middle) {
+                if (sl.size > median) {
                     rotateRight(p, x, sl, pos);
                     return;
                 }
             }
             if (pos < p.size) {
                 Node<K, V> sr = p.children[pos + 1];
-                if (sr.size > middle) {
+                if (sr.size > median) {
                     rotateLeft(p, x, sr, pos);
                     return;
                 }
@@ -280,6 +219,15 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             }
             x = p;
         }
+    }
+
+    private int position(Node<K, V> p, Node<K, V> x) {
+        for (int i = 0; i <= p.size; i++) {
+            if (x == p.children[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     void rotateRight(Node<K, V> p, Node<K, V> x, Node<K, V> sl, int pos) {
@@ -312,14 +260,6 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         sl.merge(x);
     }
 
-    private int position(Node<K, V> p, Node<K, V> x) {
-        for (int i = 0; i <= p.size; i++) {
-            if (x == p.children[i]) {
-                return i;
-            }
-        }
-        return -2;
-    }
 
     @Override
     public int size() {
@@ -349,12 +289,11 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         return "";
     }
 
-    static class Node<K extends Comparable<K>, V> {
-
-        int size;
-        Node<K, V> parent;
-        Pair<K, V>[] items;
-        Node<K, V>[] children;
+    static class Node<K, V> {
+        int size;               // 节点当前包含的数据项数量
+        Node<K, V> parent;      // 父节点
+        Pair<K, V>[] items;     // 数据项数组（每一个数据项是一个键值对）
+        Node<K, V>[] children;  // 子节点数组
 
         Node(int order) {
             this.items = new Pair[order - 1];
@@ -365,16 +304,6 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             this.items = new Pair[order - 1];
             this.children = new Node[order];
             this.items[size++] = item;
-        }
-
-        Node(int order, K key, V value) {
-            this.items = new Pair[order - 1];
-            this.children = new Node[order];
-            this.items[size++] = Pairs.of(key, value);
-        }
-
-        void addItem(int pos, K key, V value) {
-            addItem(pos, Pairs.of(key, value));
         }
 
         void addItem(int pos, Pair<K, V> item) {
@@ -388,6 +317,13 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
         void setItem(int pos, Pair<K, V> item) {
             items[pos] = item;
+        }
+
+        Node<K, V> setItems(Node<K, V> t, int pos, int length) {
+            System.arraycopy(t.items, pos, this.items, 0, size = length);
+            System.arraycopy(t.children, pos, this.children, 0, length + 1);
+            Arrays.stream(children).filter(Objects::nonNull).forEach(ch -> ch.setParent(this));
+            return this;
         }
 
         void deleteItem(int pos) {
@@ -417,7 +353,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             return this;
         }
 
-        public void deleteChild(int pos) {
+        void deleteChild(int pos) {
             if (pos < children.length - 1) {
                 System.arraycopy(children, pos + 1, children, pos, children.length - 1 - pos);
                 children[children.length - 1] = null;
@@ -426,9 +362,8 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             }
         }
 
-        Node<K, V> setParent(Node<K, V> parent) {
+        void setParent(Node<K, V> parent) {
             this.parent = parent;
-            return this;
         }
 
         void merge(Node<K, V> s) {
@@ -437,15 +372,8 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             size += s.size;
         }
 
-        boolean isLeaf() {
+        boolean isLowestLevel() {
             return children[0] == null;
-        }
-
-        Node<K, V> setItems(Node<K, V> t, int pos, int length) {
-            System.arraycopy(t.items, pos, this.items, 0, size = length);
-            System.arraycopy(t.children, pos, this.children, 0, length + 1);
-            Arrays.stream(children).filter(Objects::nonNull).forEach(ch -> ch.setParent(this));
-            return this;
         }
 
         @Override
@@ -453,7 +381,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             return "{" +
                     "\"size\":" + size +
                     ", \"items\":" + arrayToString(items) +
-                    (isLeaf() ? "" : ", \"children\":" + arrayToString(children)) +
+                    (isLowestLevel() ? "" : ", \"children\":" + arrayToString(children)) +
                     "}";
         }
 

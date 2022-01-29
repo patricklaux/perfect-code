@@ -90,28 +90,28 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private void fixAfterInsertion(Node<K, V> x) {
         // 1. 情形2：父节点是黑色，无需任何调整
         // 2. 父节点是红色
-        while (x.parent.red == RED) {
+        while (isRed(x.parent)) {
             Node<K, V> p = x.parent;
             Node<K, V> g = p.parent;
             Node<K, V> u = (p == g.left) ? g.right : g.left;
             if (isBlack(u)) {
                 // 2.1. 情形3：父节点是红色，叔节点是黑色（或叔节点不存在）
-                g.red = RED;
+                setColor(g, RED);
                 if (x == p.left) {
                     if (p == g.left) {  // LL
-                        p.red = BLACK;
+                        setColor(p, BLACK);
                         rotateRight(g);
                     } else {    // RL
-                        x.red = BLACK;
+                        setColor(x, BLACK);
                         rotateRight(p);
                         rotateLeft(g);
                     }
                 } else {
                     if (p == g.right) { // RR
-                        p.red = BLACK;
+                        setColor(p, BLACK);
                         rotateLeft(g);
                     } else {    // LR
-                        x.red = BLACK;
+                        setColor(x, BLACK);
                         rotateLeft(p);
                         rotateRight(g);
                     }
@@ -119,11 +119,12 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 return;
             } else {
                 // 2.2. 情形4：父节点是红色，叔节点是红色
-                p.red = u.red = BLACK;
+                setColor(p, BLACK);
+                setColor(u, BLACK);
                 if (g == root) {
                     return;
                 }
-                g.red = RED;
+                setColor(g, RED);
                 x = g;
             }
         }
@@ -145,29 +146,32 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         // 是否有两个孩子
         if (x.left != null && x.right != null) {
             // 交换节点
-            x = swap(x);
+            x = predecessor(x);
         }
         Node<K, V> r = x.left != null ? x.left : x.right;
         if (x.parent == null) {
-            root = r;
-            if (r != null) {
-                r.red = BLACK;
-            }
+            setColor(root = r, BLACK);
             return;
         }
         if (r == null) {
-            if (x.red == BLACK) {
+            if (isBlack(x)) {
                 fixAfterDeletion(x);
             }
             transplant(x, null);
         } else {
             transplant(x, r);
-            if (x.red == BLACK) {
+            if (isBlack(x)) {
                 fixAfterDeletion(r);
             }
         }
     }
 
+    /**
+     * 迁移待删除节点的父链接，移除节点
+     *
+     * @param x 待删除节点
+     * @param r 待删除节点的子节点
+     */
     private void transplant(Node<K, V> x, Node<K, V> r) {
         Node<K, V> p = x.parent;
         x.parent = x.left = x.right = null;
@@ -242,31 +246,18 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         return n == null || n.red == BLACK;
     }
 
-    private void setColor(Node<K, V> n, boolean red) {
-        if (n != null) n.red = red;
+    private void setColor(Node<K, V> n, boolean color) {
+        if (n != null) n.red = color;
     }
 
-    private Node<K, V> swap(Node<K, V> x) {
-        Node<K, V> s = swapPredecessor(x);
-        x.key = s.key;
-        x.val = s.val;
-        return s;
-    }
-
-    private Node<K, V> swapPredecessor(Node<K, V> x) {
-        Node<K, V> s = x.left;
-        while (s.right != null) {
-            s = s.right;
+    private Node<K, V> predecessor(Node<K, V> x) {
+        Node<K, V> pred = x.left;
+        while (pred.right != null) {
+            pred = pred.right;
         }
-        return s;
-    }
-
-    private Node<K, V> swapSuccessor(Node<K, V> x) {
-        Node<K, V> s = x.right;
-        while (s.left != null) {
-            s = s.left;
-        }
-        return s;
+        x.key = pred.key;
+        x.val = pred.val;
+        return pred;
     }
 
     @Override

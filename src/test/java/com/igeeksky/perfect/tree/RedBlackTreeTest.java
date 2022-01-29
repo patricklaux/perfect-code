@@ -30,6 +30,13 @@ public class RedBlackTreeTest {
     }
 
     @Test
+    public void testPut() {
+        RedBlackTree<String, String> tree = createTree("wabzlocudefhijkmngqstpvxry");
+        String expected = "{\"red\":false, \"key\":\"l\", \"value\":\"l\", \"left\":{\"red\":true, \"key\":\"d\", \"value\":\"d\", \"left\":{\"red\":false, \"key\":\"b\", \"value\":\"b\", \"left\":{\"red\":false, \"key\":\"a\", \"value\":\"a\"}, \"right\":{\"red\":false, \"key\":\"c\", \"value\":\"c\"}}, \"right\":{\"red\":false, \"key\":\"f\", \"value\":\"f\", \"left\":{\"red\":false, \"key\":\"e\", \"value\":\"e\"}, \"right\":{\"red\":true, \"key\":\"i\", \"value\":\"i\", \"left\":{\"red\":false, \"key\":\"h\", \"value\":\"h\", \"left\":{\"red\":true, \"key\":\"g\", \"value\":\"g\"}}, \"right\":{\"red\":false, \"key\":\"j\", \"value\":\"j\", \"right\":{\"red\":true, \"key\":\"k\", \"value\":\"k\"}}}}}, \"right\":{\"red\":false, \"key\":\"s\", \"value\":\"s\", \"left\":{\"red\":true, \"key\":\"o\", \"value\":\"o\", \"left\":{\"red\":false, \"key\":\"m\", \"value\":\"m\", \"right\":{\"red\":true, \"key\":\"n\", \"value\":\"n\"}}, \"right\":{\"red\":false, \"key\":\"q\", \"value\":\"q\", \"left\":{\"red\":true, \"key\":\"p\", \"value\":\"p\"}, \"right\":{\"red\":true, \"key\":\"r\", \"value\":\"r\"}}}, \"right\":{\"red\":true, \"key\":\"w\", \"value\":\"w\", \"left\":{\"red\":false, \"key\":\"u\", \"value\":\"u\", \"left\":{\"red\":true, \"key\":\"t\", \"value\":\"t\"}, \"right\":{\"red\":true, \"key\":\"v\", \"value\":\"v\"}}, \"right\":{\"red\":false, \"key\":\"y\", \"value\":\"y\", \"left\":{\"red\":true, \"key\":\"x\", \"value\":\"x\"}, \"right\":{\"red\":true, \"key\":\"z\", \"value\":\"z\"}}}}}";
+        Assert.assertEquals(expected, tree.toString());
+    }
+
+    @Test
     public void remove() {
         RedBlackTree<String, String> tree = createTree("abcdefghijklmnopqrstuvwxyz");
 
@@ -113,7 +120,7 @@ public class RedBlackTreeTest {
 
     @Test
     public void testGetWithMap() {
-        int size = 100000;
+        int size = 10000;
         List<String> keys = new ArrayList<>(size);
         keys.addAll(createKeys(size));
 
