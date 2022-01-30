@@ -24,6 +24,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private final int maxElement;
     private final Comparator<K> comparator;
     private final IntegerValue size = new IntegerValue();
+    private final IntegerValue height = new IntegerValue();
     private Node<K, V> root = null;
 
     public BTree(int order) {
@@ -42,38 +43,52 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     public void put(K key, V value) {
         Assert.notNull(key);
         Assert.notNull(value);
+        // 1.如果为空树，创建根节点并添加键值对
         if (root == null) {
             root = new Node<>(maxOrder, Pairs.of(key, value));
             size.increment();
+            height.increment();
             return;
         }
+        // 2.查找键，并判断键是否已存在
         Tuple2<Integer, Node<K, V>> tuple2 = search(key);
         int pos = tuple2.getT1();
         Node<K, V> x = tuple2.getT2();
-        if (pos >= 0) {
-            // 1. 当前节点已存在该Key
+        Pair<K, V> item = x.items[pos];
+        if (item != null && compare(item.getKey(), key) == 0) {
+            // 2.1. 当前节点已存在该Key
             x.setItem(pos, Pairs.of(key, value));
             return;
         }
+        // 2.2. 键不在树中，先增加树的size
         size.increment();
-        // 解决上溢问题
-        solveOverflow(x, Pairs.of(key, value));
+        // 3.添加键值对到最底层的内部节点
+        x.addItem(pos, Pairs.of(key, value));
+        // 4. 上溢处理
+        solveOverflow(x);
     }
 
-    private void solveOverflow(Node<K, V> x, Pair<K, V> item) {
-        x.addItem(findPosition(x, item.getKey()), item);
+    private void solveOverflow(Node<K, V> x) {
+        // 判断当前节点是否上溢（键数量超过允许的最大值）
         while (x.size > maxElement) {
             Node<K, V> p = x.parent;
-            // 2. 当前节点为 root
-            item = x.items[median];
+            // 1.如果出现上溢，提取当前节点最中间的数据项
+            Pair<K, V> item = x.items[median];
             int pos = 0;
             if (p == null) {
+                // 2.父节点为空，说明当前节点为 root，创建新的根节点
                 root = p = new Node<>(maxOrder);
+                // 2.1.树高 +1
+                height.increment();
             } else {
-                pos = findPosition(p, item.getKey());
+                // 3.获取中间数据项在父节点中的插入位置
+                pos = position(p, x);
             }
+            // 4.当前节点最中间的数据项并添加到父节点
             p.addItem(pos, item);
+            // 5.当前节点分裂成两个子节点并添加到父节点
             split(p, x, pos);
+            // 6.父节点设为当前节点
             x = p;
         }
     }
@@ -82,43 +97,36 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * 上溢节点分裂为两个节点
      *
      * @param p   父节点
-     * @param x   上溢生成的临时节点
+     * @param x   上溢节点
      * @param pos 索引位置
      */
     private void split(Node<K, V> p, Node<K, V> x, int pos) {
         Node<K, V> lc = new Node<K, V>(maxOrder).setItems(x, 0, median);
         Node<K, V> rc = new Node<K, V>(maxOrder).setItems(x, median + 1, maxElement - median);
-        p.setChild(pos, lc).addChild(pos + 1, rc);
-    }
-
-    private int findPosition(Node<K, V> x, K key) {
-        int m = x.size / 2, upper = x.size, lower = 0;
-        while (m >= lower && m < upper) {
-            int cmp = compare(x.items[m].getKey(), key);
-            if (cmp > 0) {
-                upper = m;
-                m = m - Math.round((float) (m - lower) / 2);
-            } else if (cmp < 0) {
-                lower = m;
-                m = m + Math.round((float) (upper - m) / 2);
-            } else {
-                return m;
-            }
-        }
-        return m;
+        p.setChild(pos, lc);
+        p.addChild(pos + 1, rc);
     }
 
     @Override
     public V get(K key) {
         Assert.notNull(key);
+        if (root == null) {
+            return null;
+        }
+        // 1.先根据 Key 找到包含该 Key 的节点
         Tuple2<Integer, Node<K, V>> tuple2 = search(key);
         int pos = tuple2.getT1();
         Node<K, V> x = tuple2.getT2();
-        return (pos >= 0) ? x.items[pos].getValue() : null;
+        Pair<K, V> item = x.items[pos];
+        if (item != null && compare(item.getKey(), key) == 0) {
+            return item.getValue();
+        }
+        // 2.如果 pos 索引值大于等于0，说明该节点包含该Key，返回value；否则返回空
+        return null;
     }
 
     /**
-     * 查找键所在的节点 及 键在该节点的索引位置（二分查找）
+     * 查找键所在的节点 及 键在该节点的索引位置
      *
      * @param key 键
      * @return 返回二元组：1.索引位置(-1表示该节点不包含该键)；2.节点
@@ -126,6 +134,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private Tuple2<Integer, Node<K, V>> search(K key) {
         Node<K, V> p = root;
         while (true) {
+            // 1. 二分查找（m 为中值，upper 为上界，lower 为下界）
             int m = p.size / 2, upper = p.size, lower = 0;
             while (m >= lower && m < upper) {
                 int cmp = compare(p.items[m].getKey(), key);
@@ -136,12 +145,16 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                     lower = m;
                     m = m + Math.round((float) (upper - m) / 2);
                 } else {
+                    // 1.1.节点包含该键
                     return Tuples.of(m, p);
                 }
             }
+            // 1.2.节点不包含该键
+            // 1.2.1.如果节点是包含键值的最底层节点，返回 (-1, node)
             if (p.isLowestLevel()) {
-                return Tuples.of(-1, p);
+                return Tuples.of(m, p);
             }
+            // 1.2.2.如果节点非包含键值的最底层节点，继续查找下一层子节点
             p = p.children[m];
         }
     }
@@ -151,12 +164,13 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         Assert.notNull(key);
         Tuple2<Integer, Node<K, V>> tuple2 = search(key);
         int pos = tuple2.getT1();
-        if (pos < 0) {
+        Node<K, V> x = tuple2.getT2();
+        Pair<K, V> item = x.items[pos];
+        if (item == null || compare(item.getKey(), key) != 0) {
             return null;
         }
         size.decrement();
-        Node<K, V> x = tuple2.getT2();
-        V oldVal = x.items[pos].getValue();
+        V oldVal = item.getValue();
         if (x.isLowestLevel()) {
             x.deleteItem(pos);
         } else {
@@ -260,10 +274,13 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         sl.merge(x);
     }
 
-
     @Override
     public int size() {
         return size.get();
+    }
+
+    public int height() {
+        return height.get();
     }
 
     @Override
@@ -274,6 +291,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     @Override
     public void clear() {
         size.set(0);
+        height.set(0);
         root = null;
     }
 
@@ -290,10 +308,17 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     static class Node<K, V> {
-        int size;               // 节点当前包含的数据项数量
-        Node<K, V> parent;      // 父节点
-        Pair<K, V>[] items;     // 数据项数组（每一个数据项是一个键值对）
-        Node<K, V>[] children;  // 子节点数组
+        //节点当前包含的键数量
+        int size;
+
+        // 父节点
+        Node<K, V> parent;
+
+        // 数据项数组（每一个数据项是一个键值对）
+        Pair<K, V>[] items;
+
+        // 子节点数组
+        Node<K, V>[] children;
 
         Node(int order) {
             this.items = new Pair[order - 1];
@@ -345,12 +370,11 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             setChild(pos, ch);
         }
 
-        Node<K, V> setChild(int index, Node<K, V> ch) {
+        void setChild(int index, Node<K, V> ch) {
             this.children[index] = ch;
             if (ch != null) {
                 ch.setParent(this);
             }
-            return this;
         }
 
         void deleteChild(int pos) {
