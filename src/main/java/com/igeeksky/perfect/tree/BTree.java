@@ -129,7 +129,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * 查找键所在的节点 及 键在该节点的索引位置
      *
      * @param key 键
-     * @return 返回二元组：1.索引位置；2.节点
+     * @return 返回二元组：(索引位置, 节点)
      */
     private Tuple2<Integer, Node<K, V>> search(K key) {
         Node<K, V> p = root;
@@ -174,7 +174,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         if (x.isLeaf()) {
             x.deleteItem(pos);
         } else {
-            x = swap(x, pos);
+            x = predecessor(x, pos);
         }
         solveUnderflow(x);
         return oldVal;
@@ -187,7 +187,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * @param pos 键的索引位置
      * @return 前驱节点
      */
-    private Node<K, V> swap(Node<K, V> x, int pos) {
+    private Node<K, V> predecessor(Node<K, V> x, int pos) {
         Node<K, V> pred = x.children[pos];
         while (!pred.isLeaf()) {
             pred = pred.children[pred.size];
@@ -234,9 +234,9 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             }
             // 3. 合并
             if (pos > 0) {
-                mergeLeft(p, x, p.children[pos - 1], pos);
+                merge(p, p.children[pos - 1], x, pos - 1);
             } else {
-                mergeRight(p, x, p.children[pos + 1], pos);
+                merge(p, x, p.children[pos + 1], pos);
             }
             x = p;
         }
@@ -291,33 +291,18 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     /**
-     * 合并右兄弟节点
+     * 合并兄弟节点
      *
      * @param p   父节点
-     * @param x   当前节点
-     * @param sr  当前节点的右兄弟
+     * @param l   左孩子节点
+     * @param r   右孩子节点
      * @param pos 父节点中用于合并的数据项索引位置
      */
-    void mergeRight(Node<K, V> p, Node<K, V> x, Node<K, V> sr, int pos) {
-        x.addItem(x.size, p.items[pos]);
+    void merge(Node<K, V> p, Node<K, V> l, Node<K, V> r, int pos) {
+        l.addItem(l.size, p.items[pos]);
         p.deleteItem(pos);
         p.deleteChild(pos + 1);
-        x.merge(sr);
-    }
-
-    /**
-     * 合并左兄弟节点
-     *
-     * @param p   父节点
-     * @param x   当前节点
-     * @param sl  当前节点的左兄弟
-     * @param pos 父节点中用于合并的数据项索引位置
-     */
-    void mergeLeft(Node<K, V> p, Node<K, V> x, Node<K, V> sl, int pos) {
-        sl.addItem(sl.size, p.items[pos - 1]);
-        p.deleteItem(pos - 1);
-        p.deleteChild(pos);
-        sl.merge(x);
+        l.merge(r);
     }
 
     @Override
