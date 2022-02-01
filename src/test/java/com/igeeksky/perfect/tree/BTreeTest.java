@@ -82,6 +82,31 @@ public class BTreeTest {
     }
 
     @Test
+    public void height() {
+        BTree<String, String> tree = createTree("wabzlocudefhijkmngqstpvxry", 5);
+        Assert.assertEquals(3, tree.height());
+    }
+
+    @Test
+    public void testHeight() {
+        BTree<String, String> tree = createTree("abcdef", 5);
+
+        String expected = "{\"size\":1, \"items\":[{\"key\":\"c\", \"value\":\"c\"}], \"children\":[{\"size\":2, \"items\":[{\"key\":\"a\", \"value\":\"a\"}, {\"key\":\"b\", \"value\":\"b\"}]}, {\"size\":3, \"items\":[{\"key\":\"d\", \"value\":\"d\"}, {\"key\":\"e\", \"value\":\"e\"}, {\"key\":\"f\", \"value\":\"f\"}]}]}";
+        Assert.assertEquals(expected, tree.toString());
+        Assert.assertEquals(2, tree.height());
+
+        tree.remove("f");
+        expected = "{\"size\":1, \"items\":[{\"key\":\"c\", \"value\":\"c\"}], \"children\":[{\"size\":2, \"items\":[{\"key\":\"a\", \"value\":\"a\"}, {\"key\":\"b\", \"value\":\"b\"}]}, {\"size\":2, \"items\":[{\"key\":\"d\", \"value\":\"d\"}, {\"key\":\"e\", \"value\":\"e\"}]}]}";
+        Assert.assertEquals(expected, tree.toString());
+        Assert.assertEquals(2, tree.height());
+
+        tree.remove("e");
+        expected = "{\"size\":4, \"items\":[{\"key\":\"a\", \"value\":\"a\"}, {\"key\":\"b\", \"value\":\"b\"}, {\"key\":\"c\", \"value\":\"c\"}, {\"key\":\"d\", \"value\":\"d\"}]}";
+        Assert.assertEquals(expected, tree.toString());
+        Assert.assertEquals(1, tree.height());
+    }
+
+    @Test
     public void isEmpty() {
         BTree<String, String> tree = createTree("wabzlocudefhijkmngqstpvxry", 6);
         Assert.assertFalse(tree.isEmpty());

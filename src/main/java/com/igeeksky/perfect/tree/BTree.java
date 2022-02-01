@@ -56,11 +56,11 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         Node<K, V> x = tuple2.getT2();
         Pair<K, V> item = x.items[pos];
         if (item != null && compare(item.getKey(), key) == 0) {
-            // 2.1. 当前节点已存在该Key
+            // 2.1. 当前节点已存在该 Key
             x.setItem(pos, Pairs.of(key, value));
             return;
         }
-        // 2.2. 键不在树中，先增加树的size
+        // 2.2. 键不在树中，增加树的size
         size.increment();
         // 3.添加键值对到最底层的内部节点
         x.addItem(pos, Pairs.of(key, value));
@@ -118,10 +118,10 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         int pos = tuple2.getT1();
         Node<K, V> x = tuple2.getT2();
         Pair<K, V> item = x.items[pos];
+        // 2.如果 pos 对应的数据项不为空且两个键相同，返回值；否则返回空
         if (item != null && compare(item.getKey(), key) == 0) {
             return item.getValue();
         }
-        // 2.如果 pos 索引值大于等于0，说明该节点包含该Key，返回value；否则返回空
         return null;
     }
 
@@ -129,7 +129,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * 查找键所在的节点 及 键在该节点的索引位置
      *
      * @param key 键
-     * @return 返回二元组：1.索引位置(-1表示该节点不包含该键)；2.节点
+     * @return 返回二元组：1.索引位置；2.节点
      */
     private Tuple2<Integer, Node<K, V>> search(K key) {
         Node<K, V> p = root;
@@ -150,11 +150,11 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 }
             }
             // 1.2.节点不包含该键
-            // 1.2.1.如果节点是包含键值的最底层节点，返回 (-1, node)
-            if (p.isLowestLevel()) {
+            // 1.2.1.已到达叶子节点，结束查找
+            if (p.isLeaf()) {
                 return Tuples.of(m, p);
             }
-            // 1.2.2.如果节点非包含键值的最底层节点，继续查找下一层子节点
+            // 1.2.2.未到达叶子节点，查找子节点
             p = p.children[m];
         }
     }
@@ -171,7 +171,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
         size.decrement();
         V oldVal = item.getValue();
-        if (x.isLowestLevel()) {
+        if (x.isLeaf()) {
             x.deleteItem(pos);
         } else {
             x = swap(x, pos);
@@ -181,7 +181,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     /**
-     * 与前驱交换键
+     * 与前驱交换数据项
      *
      * @param x   待删除键的节点
      * @param pos 键的索引位置
@@ -189,7 +189,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      */
     private Node<K, V> swap(Node<K, V> x, int pos) {
         Node<K, V> pred = x.children[pos];
-        while (!pred.isLowestLevel()) {
+        while (!pred.isLeaf()) {
             pred = pred.children[pred.size];
         }
         int swapIndex = pred.size - 1;
@@ -199,20 +199,26 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     /**
-     * 解决下溢问题
+     * 下溢处理
      *
-     * @param x 叶子节点
+     * @param x 当前节点
      */
     private void solveUnderflow(Node<K, V> x) {
         while (x.size < median) {
-            // 1. 旋转
             Node<K, V> p = x.parent;
             if (p == null) {
+                // 1.当前节点为根节点，且已无数据项，其唯一子节点设为根节点
+                if (x.size == 0) {
+                    root = x.children[0];
+                    height.decrement();
+                }
                 return;
             }
             int pos = position(p, x);
+            // 2. 旋转
             if (pos > 0) {
                 Node<K, V> sl = p.children[pos - 1];
+                // 2.1.左兄弟有富余数据项，右旋
                 if (sl.size > median) {
                     rotateRight(p, x, sl, pos);
                     return;
@@ -220,12 +226,13 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             }
             if (pos < p.size) {
                 Node<K, V> sr = p.children[pos + 1];
+                // 2.2.右兄弟有富余数据项，左旋
                 if (sr.size > median) {
                     rotateLeft(p, x, sr, pos);
                     return;
                 }
             }
-            // 2. 合并
+            // 3. 合并
             if (pos > 0) {
                 mergeLeft(p, x, p.children[pos - 1], pos);
             } else {
@@ -235,6 +242,13 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
     }
 
+    /**
+     * 获取子节点在父节点中的索引位置
+     *
+     * @param p 父节点
+     * @param x 子节点
+     * @return 索引位置
+     */
     private int position(Node<K, V> p, Node<K, V> x) {
         for (int i = 0; i <= p.size; i++) {
             if (x == p.children[i]) {
@@ -244,6 +258,14 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         return -1;
     }
 
+    /**
+     * 右旋
+     *
+     * @param p   父节点
+     * @param x   当前节点
+     * @param sl  当前节点的左兄弟
+     * @param pos 父节点中用于旋转的数据项索引位置
+     */
     void rotateRight(Node<K, V> p, Node<K, V> x, Node<K, V> sl, int pos) {
         x.addItem(0, p.items[pos]);
         p.setItem(pos, sl.items[sl.size - 1]);
@@ -252,6 +274,14 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         sl.deleteChild(sl.size);
     }
 
+    /**
+     * 左旋
+     *
+     * @param p   父节点
+     * @param x   当前节点
+     * @param sr  当前节点的右兄弟
+     * @param pos 父节点中用于旋转的数据项索引位置
+     */
     void rotateLeft(Node<K, V> p, Node<K, V> x, Node<K, V> sr, int pos) {
         x.addItem(x.size, p.items[pos]);
         p.setItem(pos, sr.items[0]);
@@ -260,6 +290,14 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         sr.deleteChild(0);
     }
 
+    /**
+     * 合并右兄弟节点
+     *
+     * @param p   父节点
+     * @param x   当前节点
+     * @param sr  当前节点的右兄弟
+     * @param pos 父节点中用于合并的数据项索引位置
+     */
     void mergeRight(Node<K, V> p, Node<K, V> x, Node<K, V> sr, int pos) {
         x.addItem(x.size, p.items[pos]);
         p.deleteItem(pos);
@@ -267,6 +305,14 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         x.merge(sr);
     }
 
+    /**
+     * 合并左兄弟节点
+     *
+     * @param p   父节点
+     * @param x   当前节点
+     * @param sl  当前节点的左兄弟
+     * @param pos 父节点中用于合并的数据项索引位置
+     */
     void mergeLeft(Node<K, V> p, Node<K, V> x, Node<K, V> sl, int pos) {
         sl.addItem(sl.size, p.items[pos - 1]);
         p.deleteItem(pos - 1);
@@ -396,7 +442,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             size += s.size;
         }
 
-        boolean isLowestLevel() {
+        boolean isLeaf() {
             return children[0] == null;
         }
 
@@ -405,7 +451,7 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             return "{" +
                     "\"size\":" + size +
                     ", \"items\":" + arrayToString(items) +
-                    (isLowestLevel() ? "" : ", \"children\":" + arrayToString(children)) +
+                    (isLeaf() ? "" : ", \"children\":" + arrayToString(children)) +
                     "}";
         }
 
