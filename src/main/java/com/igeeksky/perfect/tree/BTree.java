@@ -34,7 +34,9 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     public BTree(int order, Comparator<K> comparator) {
         // 预留 1个空位用于处理上溢
         this.maxOrder = order + 1;
+        // 中值，向上取整，也是一个节点中的最小数据项数量
         this.median = Math.round((float) order / 2) - 1;
+        // 最大数据项数量
         this.maxElement = order - 1;
         this.comparator = comparator;
     }
@@ -162,21 +164,28 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     @Override
     public V remove(K key) {
         Assert.notNull(key);
+        // 1.查找键所在节点
         Tuple2<Integer, Node<K, V>> tuple2 = search(key);
         int pos = tuple2.getT1();
         Node<K, V> x = tuple2.getT2();
         Pair<K, V> item = x.items[pos];
+        // 2.如果键不存在于树中，结束
         if (item == null || compare(item.getKey(), key) != 0) {
             return null;
         }
+        // 3.如果键存在于树中，删除数据项，树包含的数据项数量减1
         size.decrement();
         V oldVal = item.getValue();
         if (x.isLeaf()) {
+            // 3.1.如果是叶子节点，直接删除
             x.deleteItem(pos);
         } else {
+            // 3.2.如果是非叶节点，与前驱交换数据项，前驱必定为叶子节点
             x = predecessor(x, pos);
         }
+        // 4.解决下溢问题
         solveUnderflow(x);
+        // 5.返回旧值
         return oldVal;
     }
 
@@ -192,9 +201,12 @@ public class BTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         while (!pred.isLeaf()) {
             pred = pred.children[pred.size];
         }
+        // 1.前驱节点中的最后一个数据项即为前驱
         int swapIndex = pred.size - 1;
         x.items[pos] = pred.items[swapIndex];
+        // 2.前驱节点删除已交换的数据项
         pred.deleteItem(swapIndex);
+        // 3.返回前驱节点
         return pred;
     }
 
