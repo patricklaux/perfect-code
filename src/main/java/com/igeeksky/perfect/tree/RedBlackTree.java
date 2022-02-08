@@ -30,11 +30,27 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         return (p == null) ? null : p.val;
     }
 
-    @Override
+    private Node<K, V> search(K key) {
+        Assert.notNull(key);
+        Node<K, V> p = root;
+        while (p != null) {
+            int cmp = compare(p.key, key);
+            if (cmp > 0) {
+                p = p.left;
+            } else if (cmp < 0) {
+                p = p.right;
+            } else {
+                return p;
+            }
+        }
+        return null;
+    }
+
     public void put(K key, V value) {
         Assert.notNull(key);
         Assert.notNull(value);
-        if (root == null) { // 0. 情形1：新插入节点为根节点
+        if (root == null) {
+            // 情形1：新插入节点为根节点
             size.increment();
             root = new Node<>(key, value, BLACK);
             size.set(1);
@@ -42,6 +58,7 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
         Node<K, V> p = root;
         while (true) {
+            // 查找并将新节点添加为叶子节点
             int cmp = compare(p.key, key);
             if (cmp > 0) {
                 if (p.left == null) {
@@ -66,26 +83,10 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
     }
 
-    private Node<K, V> search(K key) {
-        Assert.notNull(key);
-        Node<K, V> p = root;
-        while (p != null) {
-            int cmp = compare(p.key, key);
-            if (cmp > 0) {
-                p = p.left;
-            } else if (cmp < 0) {
-                p = p.right;
-            } else {
-                return p;
-            }
-        }
-        return null;
-    }
-
     /**
-     * 插入节点后变色和旋转，使得其符合红黑树的性质
+     * 插入节点后变色和旋转，修复红黑树的性质
      *
-     * @param x 新插入节点
+     * @param x 当前节点
      */
     private void fixAfterInsertion(Node<K, V> x) {
         // 1. 情形2：父节点是黑色，无需任何调整
@@ -95,22 +96,22 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             Node<K, V> g = p.parent;
             Node<K, V> u = (p == g.left) ? g.right : g.left;
             if (isBlack(u)) {
-                // 2.1. 情形3：父节点是红色，叔节点是黑色（或叔节点不存在）
+                // 情形4：父节点是红色，叔节点是黑色（或叔节点不存在）
                 setColor(g, RED);
                 if (x == p.left) {
-                    if (p == g.left) {  // LL
+                    if (p == g.left) {  // 4-1: LL
                         setColor(p, BLACK);
                         rotateRight(g);
-                    } else {    // RL
+                    } else {    // 4-4: RL
                         setColor(x, BLACK);
                         rotateRight(p);
                         rotateLeft(g);
                     }
                 } else {
-                    if (p == g.right) { // RR
+                    if (p == g.right) { // 4-2: RR
                         setColor(p, BLACK);
                         rotateLeft(g);
-                    } else {    // LR
+                    } else {    // 4-3: LR
                         setColor(x, BLACK);
                         rotateLeft(p);
                         rotateRight(g);
@@ -118,7 +119,7 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 }
                 return;
             } else {
-                // 2.2. 情形4：父节点是红色，叔节点是红色
+                // 情形3：父节点是红色，叔节点是红色
                 setColor(p, BLACK);
                 setColor(u, BLACK);
                 if (g == root) {
@@ -145,25 +146,39 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         size.decrement();
         // 是否有两个孩子
         if (x.left != null && x.right != null) {
-            // 交换节点
+            // 交换键值
             x = predecessor(x);
         }
-        Node<K, V> r = x.left != null ? x.left : x.right;
-        if (x.parent == null) {
-            setColor(root = r, BLACK);
-            return;
-        }
-        if (r == null) {
-            if (isBlack(x)) {
-                fixAfterDeletion(x);
+        // 获取待删除节点的子节点，用以接替待删除节点的位置
+        Node<K, V> replacement = x.left != null ? x.left : x.right;
+        if (isBlack(x)) {
+            // 黑色违规
+            if (replacement != null) {
+                // 移除待删除节点，子节点替换其位置
+                transplant(x, replacement);
+                fixAfterDeletion(replacement);
+                return;
             }
-            transplant(x, null);
-        } else {
-            transplant(x, r);
-            if (isBlack(x)) {
-                fixAfterDeletion(r);
-            }
+            fixAfterDeletion(x);
         }
+        // 移除待删除节点，子节点替换其位置
+        transplant(x, replacement);
+    }
+
+    /**
+     * 与前驱交换键值
+     *
+     * @param x 待删除节点
+     * @return 前驱
+     */
+    private Node<K, V> predecessor(Node<K, V> x) {
+        Node<K, V> pred = x.left;
+        while (pred.right != null) {
+            pred = pred.right;
+        }
+        x.key = pred.key;
+        x.val = pred.val;
+        return pred;
     }
 
     /**
@@ -175,7 +190,13 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private void transplant(Node<K, V> x, Node<K, V> r) {
         Node<K, V> p = x.parent;
         x.parent = x.left = x.right = null;
-        if (r != null) r.parent = p;
+        if (p == null) {
+            root = r;
+            return;
+        }
+        if (r != null) {
+            r.parent = p;
+        }
         if (x == p.left) {
             p.left = r;
         } else {
@@ -183,6 +204,11 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
     }
 
+    /**
+     * 删除节点后修复红黑树的性质
+     *
+     * @param x 待删除节点（或其唯一子节点）
+     */
     private void fixAfterDeletion(Node<K, V> x) {
         while (x != root && isBlack(x)) {
             if (x == x.parent.left) {
@@ -250,16 +276,6 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         if (n != null) n.red = color;
     }
 
-    private Node<K, V> predecessor(Node<K, V> x) {
-        Node<K, V> pred = x.left;
-        while (pred.right != null) {
-            pred = pred.right;
-        }
-        x.key = pred.key;
-        x.val = pred.val;
-        return pred;
-    }
-
     @Override
     public int size() {
         return size.get();
@@ -290,13 +306,13 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     private static final boolean BLACK = false;
 
     static class Node<K, V> {
-        K key;
-        V val;
+        K key;  // 键
+        V val;  // 值
 
-        Node<K, V> left;
-        Node<K, V> right;
-        Node<K, V> parent;
-        boolean red = RED;
+        Node<K, V> left;    // 左孩子
+        Node<K, V> right;   // 右孩子
+        Node<K, V> parent;  // 父节点
+        boolean red = RED;  // 颜色，默认红色
 
         Node(K key, V value, Node<K, V> parent) {
             this.key = key;
@@ -321,6 +337,11 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
     }
 
+    /**
+     * 左旋
+     *
+     * @param p 节点
+     */
     private void rotateLeft(Node<K, V> p) {
         Node<K, V> r = p.right;
         p.right = r.left;
@@ -339,6 +360,11 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         p.parent = r;
     }
 
+    /**
+     * 右旋
+     *
+     * @param p 节点
+     */
     private void rotateRight(Node<K, V> p) {
         Node<K, V> l = p.left;
         p.left = l.right;
