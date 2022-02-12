@@ -89,45 +89,38 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      * @param x 当前节点
      */
     private void fixAfterInsertion(Node<K, V> x) {
-        // 1. 情形2：父节点是黑色，无需任何调整
+        // 1. 情形2：父节点为黑色，无需任何调整
         // 2. 父节点是红色
         while (isRed(x.parent)) {
             Node<K, V> p = x.parent;
             Node<K, V> g = p.parent;
             Node<K, V> u = (p == g.left) ? g.right : g.left;
             if (isBlack(u)) {
-                // 情形4：父节点是红色，叔节点是黑色（或叔节点不存在）
+                // 情形4：父节点为红色，叔叔节点为黑色（或叔叔节点不存在）
                 setColor(g, RED);
-                if (x == p.left) {
-                    if (p == g.left) {  // 4-1: LL
-                        setColor(p, BLACK);
-                        rotateRight(g);
-                    } else {    // 4-4: RL
-                        setColor(x, BLACK);
-                        rotateRight(p);
-                        rotateLeft(g);
+                if (p == g.left) {
+                    if (x == p.right) {
+                        rotateLeft(p);  // 4-3：LR
+                        p = x;          // 4-3：LR
                     }
+                    setColor(p, BLACK); // 4-1：LL
+                    rotateRight(g);     // 4-1：LL
                 } else {
-                    if (p == g.right) { // 4-2: RR
-                        setColor(p, BLACK);
-                        rotateLeft(g);
-                    } else {    // 4-3: LR
-                        setColor(x, BLACK);
-                        rotateLeft(p);
-                        rotateRight(g);
+                    if (x == p.left) {
+                        rotateRight(p); // 4-4：RL
+                        p = x;          // 4-4：RL
                     }
+                    setColor(p, BLACK); // 4-2：RR
+                    rotateLeft(g);      // 4-2：RR
                 }
                 return;
-            } else {
-                // 情形3：父节点是红色，叔节点是红色
-                setColor(p, BLACK);
-                setColor(u, BLACK);
-                if (g == root) {
-                    return;
-                }
-                setColor(g, RED);
-                x = g;
             }
+            // 情形3：父节点是红色，叔叔节点是红色
+            setColor(p, BLACK);
+            setColor(u, BLACK);
+            if (g == root) return;
+            setColor(g, RED);
+            x = g;
         }
     }
 
@@ -146,27 +139,27 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         size.decrement();
         // 是否有两个孩子
         if (x.left != null && x.right != null) {
-            // 交换键值
+            // 情形A1：与前驱交换
             x = predecessor(x);
         }
         // 获取待删除节点的子节点，用以接替待删除节点的位置
         Node<K, V> replacement = x.left != null ? x.left : x.right;
-        if (isBlack(x)) {
-            // 黑色违规
-            if (replacement != null) {
-                // 移除待删除节点，子节点替换其位置
-                transplant(x, replacement);
-                fixAfterDeletion(replacement);
-                return;
+        if (replacement != null) {
+            // 情形A2：待删除节点 X 有一个孩子（X 必为黑色，r 必为红色）
+            // 子节点设为黑色
+            setColor(replacement, BLACK);
+        } else {
+            if (isBlack(x)) {
+                // 情形A4
+                fixAfterDeletion(x);
             }
-            fixAfterDeletion(x);
         }
-        // 移除待删除节点，子节点替换其位置
+        // 移除待删除节点
         transplant(x, replacement);
     }
 
     /**
-     * 与前驱交换键值
+     * 与前驱交换
      *
      * @param x 待删除节点
      * @return 前驱
@@ -189,7 +182,6 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
      */
     private void transplant(Node<K, V> x, Node<K, V> r) {
         Node<K, V> p = x.parent;
-        x.parent = x.left = x.right = null;
         if (p == null) {
             root = r;
             return;
@@ -207,61 +199,77 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     /**
      * 删除节点后修复红黑树的性质
      *
-     * @param x 待删除节点（或其唯一子节点）
+     * @param x 当前节点（待删除节点或其唯一子节点）
      */
     private void fixAfterDeletion(Node<K, V> x) {
-        while (x != root && isBlack(x)) {
+        // 情形 B1：如果x 为根，退出
+        while (x != root) {
             if (x == x.parent.left) {
                 Node<K, V> s = x.parent.right;
                 if (s.red == RED) {
-                    setColor(s, BLACK);
-                    setColor(x.parent, RED);
-                    rotateLeft(x.parent);
-                    s = x.parent.right;
+                    // 情形 B2：兄弟节点S 染黑色，父节点P 染红色，父节点P 左旋，未结束
+                    setColor(s, BLACK);         // B2
+                    setColor(x.parent, RED);    // B2
+                    rotateLeft(x.parent);       // B2
+                    s = x.parent.right;         // B2
                 }
                 if (isBlack(s.left) && isBlack(s.right)) {
-                    setColor(s, RED);
-                    x = x.parent;
+                    // 情形 B3 或 B6：兄弟节点S 染红色，未结束
+                    setColor(s, RED);               // B3 或 B6
+                    if (isRed(x.parent)) {
+                        setColor(x.parent, BLACK);  // B3
+                        return;                     // B3
+                    }
+                    x = x.parent;                   // B6 Δh+1
                 } else {
                     if (isBlack(s.right)) {
-                        setColor(s.left, BLACK);
-                        setColor(s, RED);
-                        rotateRight(s);
-                        s = x.parent.right;
+                        // 情形 B5：近侄节点C 染黑色，兄弟节点S 染红色，兄弟节点S 右旋，S:=P.r，未结束
+                        setColor(s.left, BLACK);    // B5
+                        setColor(s, RED);           // B5
+                        rotateRight(s);             // B5
+                        s = x.parent.right;         // B5
                     }
-                    setColor(s, x.parent.red);
-                    setColor(x.parent, BLACK);
-                    setColor(s.right, BLACK);
-                    rotateLeft(x.parent);
-                    x = root;
+                    // 情形 B4：兄弟节点S 染父节点P 的颜色，父节点P 染黑色，远侄节点D 染黑色，父节点P 左旋，结束
+                    setColor(s, x.parent.red);      // B4
+                    setColor(x.parent, BLACK);      // B4
+                    setColor(s.right, BLACK);       // B4
+                    rotateLeft(x.parent);           // B4
+                    return;                         // B4
                 }
             } else {
                 Node<K, V> s = x.parent.left;
                 if (s.red == RED) {
-                    setColor(s, BLACK);
-                    setColor(x.parent, RED);
-                    rotateRight(x.parent);
-                    s = x.parent.left;
+                    // 情形 B2：兄弟节点S 染黑色，父节点P 染红色，父节点P 右旋，未结束
+                    setColor(s, BLACK);             // B2
+                    setColor(x.parent, RED);        // B2
+                    rotateRight(x.parent);          // B2
+                    s = x.parent.left;              // B2
                 }
                 if (isBlack(s.left) && isBlack(s.right)) {
-                    setColor(s, RED);
-                    x = x.parent;
+                    // 情形 B3 或 B6：兄弟节点S 染红色，未结束
+                    setColor(s, RED);               // B3 或 B6
+                    if (isRed(x.parent)) {
+                        setColor(x.parent, BLACK);  // B3
+                        return;                     // B3
+                    }
+                    x = x.parent;                   // B6 Δh+1
                 } else {
                     if (isBlack(s.left)) {
-                        setColor(s.right, BLACK);
-                        setColor(s, RED);
-                        rotateLeft(s);
-                        s = x.parent.left;
+                        // 情形 B5：近侄节点C 染黑色，兄弟节点S 染红色，兄弟节点S 左旋，S:=P.l，未结束
+                        setColor(s.right, BLACK);   //B5
+                        setColor(s, RED);           //B5
+                        rotateLeft(s);              //B5
+                        s = x.parent.left;          //B5
                     }
-                    setColor(s, x.parent.red);
-                    setColor(x.parent, BLACK);
-                    setColor(s.left, BLACK);
-                    rotateRight(x.parent);
-                    x = root;
+                    // 情形 B4：兄弟节点S 染父节点P 的颜色，父节点P 染黑色，远侄节点D 染黑色，父节点P 右旋，结束
+                    setColor(s, x.parent.red);      // B4
+                    setColor(x.parent, BLACK);      // B4
+                    setColor(s.left, BLACK);        // B4
+                    rotateRight(x.parent);          // B4
+                    return;                         // B4
                 }
             }
         }
-        setColor(x, BLACK);
     }
 
     private boolean isRed(Node<K, V> n) {
