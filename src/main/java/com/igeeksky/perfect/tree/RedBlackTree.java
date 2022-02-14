@@ -49,21 +49,22 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     public void put(K key, V value) {
         Assert.notNull(key);
         Assert.notNull(value);
+        // 情形1：新插入节点为根节点
         if (root == null) {
-            // 情形1：新插入节点为根节点
             size.increment();
             root = new Node<>(key, value, BLACK);
             size.set(1);
             return;
         }
         Node<K, V> p = root;
+        // 先查找，然后将新节点添加为叶子节点
         while (true) {
-            // 查找并将新节点添加为叶子节点
             int cmp = compare(p.key, key);
             if (cmp > 0) {
                 if (p.left == null) {
                     size.increment();
                     p.left = new Node<>(key, value, p);
+                    // 修复红黑树性质
                     fixAfterInsertion(p.left);
                     return;
                 }
@@ -72,11 +73,13 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
                 if (p.right == null) {
                     size.increment();
                     p.right = new Node<>(key, value, p);
+                    // 修复红黑树性质
                     fixAfterInsertion(p.right);
                     return;
                 }
                 p = p.right;
             } else {
+                // 键已在树中，覆盖原值后退出
                 p.val = value;
                 return;
             }
@@ -84,13 +87,13 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
     }
 
     /**
-     * 插入节点后变色和旋转，修复红黑树的性质
+     * 插入节点后修复红黑树性质
      *
      * @param x 当前节点
      */
     private void fixAfterInsertion(Node<K, V> x) {
-        // 1. 情形2：父节点为黑色，无需任何调整
-        // 2. 父节点是红色
+        // 1. 情形2：父节点为黑色，无需调整，不进入循环
+        // 2. 父节点是红色，需要修复，进入循环
         while (isRed(x.parent)) {
             Node<K, V> p = x.parent;
             Node<K, V> g = p.parent;
@@ -118,9 +121,9 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
             // 情形3：父节点是红色，叔叔节点是红色
             setColor(p, BLACK);
             setColor(u, BLACK);
-            if (g == root) return;
+            if (g == root) return;  // 情形1：已经递归到根节点(这里省略了变色过程)
             setColor(g, RED);
-            x = g;
+            x = g;  // 再次迭代
         }
     }
 
@@ -356,13 +359,14 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         if (r.left != null) {
             r.left.parent = p;
         }
-        r.parent = p.parent;
-        if (p.parent == null) {
+        Node<K, V> g = r.parent = p.parent;
+        if (g == null) {
+            // 祖父节点为空，r设为根节点
             root = r;
-        } else if (p.parent.left == p) {
-            p.parent.left = r;
+        } else if (g.left == p) {
+            g.left = r;
         } else {
-            p.parent.right = r;
+            g.right = r;
         }
         r.left = p;
         p.parent = r;
@@ -370,6 +374,21 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
 
     /**
      * 右旋
+     *
+     * <pre>
+     *     以 p 节点的左孩子 l 为轴进行旋转：
+     *     p 变成 l 的右孩子；
+     *     lr 变成 p 的左孩子；
+     *     p 的 父节点变成 l；
+     *     l 的父节点变成 p 的父节点 g；
+     *           g                   g
+     *          /                   /
+     *         p                   l
+     *       /   \               /   \
+     *      l     r             ll    p
+     *    /  \                      /  \
+     *   ll   lr                   lr   r
+     * </pre>
      *
      * @param p 节点
      */
@@ -379,13 +398,14 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         if (l.right != null) {
             l.right.parent = p;
         }
-        l.parent = p.parent;
-        if (p.parent == null) {
+        Node<K, V> g = l.parent = p.parent;
+        if (g == null) {
+            // 祖父节点为空，l设为根节点
             root = l;
-        } else if (p.parent.left == p) {
-            p.parent.left = l;
+        } else if (g.left == p) {
+            g.left = l;
         } else {
-            p.parent.right = l;
+            g.right = l;
         }
         l.right = p;
         p.parent = l;
