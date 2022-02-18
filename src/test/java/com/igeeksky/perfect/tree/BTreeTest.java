@@ -1,7 +1,13 @@
 package com.igeeksky.perfect.tree;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * @author Patrick.Lau
@@ -112,6 +118,60 @@ public class BTreeTest {
         Assert.assertFalse(tree.isEmpty());
         tree.clear();
         Assert.assertTrue(tree.isEmpty());
+    }
+
+    @Test
+    @Ignore
+    public void performance() {
+        Set<String> keys = createKeys(10000000);
+
+        long t1 = System.currentTimeMillis();
+        BTree<String, String> tree = new BTree<>(32);
+        for (String key : keys) {
+            tree.put(key, key);
+        }
+        long t2 = System.currentTimeMillis();
+        System.out.println("tree-put:\t" + (t2 - t1));
+
+        TreeMap<String, String> map = new TreeMap<>();
+        for (String key : keys) {
+            map.put(key, key);
+        }
+        long t3 = System.currentTimeMillis();
+        System.out.println("map-put:\t" + (t3 - t2));
+
+        for (String k : keys) {
+            tree.get(k);
+        }
+        long t4 = System.currentTimeMillis();
+        System.out.println("tree-get:\t" + (t4 - t3));
+
+        for (String k : keys) {
+            map.get(k);
+        }
+        long t5 = System.currentTimeMillis();
+        System.out.println("map-get:\t" + (t5 - t4));
+    }
+
+    private Set<String> createKeys(int size) {
+        Random random = new Random();
+        Set<String> keys = new HashSet<>(size);
+        while (keys.size() < size) {
+            int length = random.nextInt(10);
+            if (length > 5) {
+                char[] chars = new char[length];
+                for (int j = 0; j < length; ) {
+                    int index = random.nextInt(91);
+                    if (index >= 65) {
+                        char c = (char) index;
+                        chars[j] = c;
+                        ++j;
+                    }
+                }
+                keys.add(new String(chars));
+            }
+        }
+        return keys;
     }
 
     private BTree<String, String> createTree(String text, int order) {

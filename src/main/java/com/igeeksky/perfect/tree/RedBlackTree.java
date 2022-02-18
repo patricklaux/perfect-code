@@ -142,23 +142,20 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         size.decrement();
         // 是否有两个孩子
         if (x.left != null && x.right != null) {
-            // 情形A1：与前驱交换
-            x = predecessor(x);
+            x = predecessor(x);         // 情形A1：与前驱交换
         }
         // 获取待删除节点的子节点，用以接替待删除节点的位置
-        Node<K, V> replacement = x.left != null ? x.left : x.right;
-        if (replacement != null) {
-            // 情形A2：待删除节点 X 有一个孩子（X 必为黑色，r 必为红色）
-            // 子节点设为黑色
-            setColor(replacement, BLACK);
+        Node<K, V> ch = x.left != null ? x.left : x.right;
+        if (ch != null) {
+            // 情形A2：待删除节点有一个孩子（X必为黑，ch必为红）
+            setColor(ch, BLACK);        // 子节点设为黑色
+            transplant(x, ch);          // 移除待删除节点
         } else {
             if (isBlack(x)) {
-                // 情形A4
-                fixAfterDeletion(x);
+                fixAfterDeletion(x);    // 情形A4
             }
         }
-        // 移除待删除节点
-        transplant(x, replacement);
+        transplant(x, ch);              // 移除待删除节点
     }
 
     /**
@@ -361,8 +358,7 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
         Node<K, V> g = r.parent = p.parent;
         if (g == null) {
-            // 祖父节点为空，r设为根节点
-            root = r;
+            root = r;   // 祖父节点为空，r设为根节点
         } else if (g.left == p) {
             g.left = r;
         } else {
@@ -400,8 +396,7 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         }
         Node<K, V> g = l.parent = p.parent;
         if (g == null) {
-            // 祖父节点为空，l设为根节点
-            root = l;
+            root = l;   // 祖父节点为空，l设为根节点
         } else if (g.left == p) {
             g.left = l;
         } else {
