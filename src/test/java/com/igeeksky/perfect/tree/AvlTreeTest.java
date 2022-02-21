@@ -256,10 +256,7 @@ public class AvlTreeTest {
 
         keys.subList(offset, size).clear();
 
-        keys.forEach(k -> {
-            avl.remove(k);
-            map.remove(k);
-        });
+        keys.forEach(k -> Assert.assertEquals(map.remove(k), avl.remove(k)));
 
         Assert.assertEquals(map.size(), avl.size());
         for (String k : keys) {

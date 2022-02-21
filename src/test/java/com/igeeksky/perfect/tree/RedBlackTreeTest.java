@@ -1,5 +1,6 @@
 package com.igeeksky.perfect.tree;
 
+import com.igeeksky.perfect.KeyGenerator;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -122,7 +123,7 @@ public class RedBlackTreeTest {
     public void testGetWithMap() {
         int size = 10000;
         List<String> keys = new ArrayList<>(size);
-        keys.addAll(createKeys(size));
+        keys.addAll(KeyGenerator.createKeys(size));
 
         RedBlackTree<String, String> tree = new RedBlackTree<>();
         Map<String, String> map = new HashMap<>();
@@ -145,10 +146,7 @@ public class RedBlackTreeTest {
 
         keys.subList(offset, size).clear();
 
-        keys.forEach(k -> {
-            tree.remove(k);
-            map.remove(k);
-        });
+        keys.forEach(k -> Assert.assertEquals(map.remove(k), tree.remove(k)));
 
         Assert.assertEquals(map.size(), tree.size());
         for (String k : keys) {
@@ -159,7 +157,7 @@ public class RedBlackTreeTest {
     @Test
     @Ignore
     public void performance() {
-        Set<String> keys = createKeys(10000000);
+        Set<String> keys = KeyGenerator.createKeys(10000000);
 
         long t1 = System.currentTimeMillis();
         RedBlackTree<String, String> rbt = new RedBlackTree<>();
@@ -187,26 +185,5 @@ public class RedBlackTreeTest {
         }
         long t5 = System.currentTimeMillis();
         System.out.println("map-get:\t" + (t5 - t4));
-    }
-
-    private Set<String> createKeys(int size) {
-        Random random = new Random();
-        Set<String> keys = new HashSet<>(size);
-        while (keys.size() < size) {
-            int length = random.nextInt(10);
-            if (length > 5) {
-                char[] chars = new char[length];
-                for (int j = 0; j < length; ) {
-                    int index = random.nextInt(91);
-                    if (index >= 65) {
-                        char c = (char) index;
-                        chars[j] = c;
-                        ++j;
-                    }
-                }
-                keys.add(new String(chars));
-            }
-        }
-        return keys;
     }
 }

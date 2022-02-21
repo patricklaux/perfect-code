@@ -1,6 +1,6 @@
 # perfect-code
 
-数据结构和算法的实验场，算法相关资料的存档库。
+数据结构实验场，算法资料存档库。
 
 [StandardTrie](src/main/java/com/igeeksky/perfect/nlp/trie/StandardTrie.java)
 
@@ -18,3 +18,6 @@
 
 
 [RedBlackTree](src/main/java/com/igeeksky/perfect/tree/RedBlackTree.java)
+
+
+[SkipList](src/main/java/com/igeeksky/perfect/tree/SkipList.java)

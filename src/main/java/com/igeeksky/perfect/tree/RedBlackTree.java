@@ -149,7 +149,6 @@ public class RedBlackTree<K extends Comparable<K>, V> implements BaseMap<K, V> {
         if (ch != null) {
             // 情形A2：待删除节点有一个孩子（X必为黑，ch必为红）
             setColor(ch, BLACK);        // 子节点设为黑色
-            transplant(x, ch);          // 移除待删除节点
         } else {
             if (isBlack(x)) {
                 fixAfterDeletion(x);    // 情形A4
