@@ -15,7 +15,7 @@ public class SkipListTest {
 
     @Test
     public void testGetWithMap() {
-        int size = 10000;
+        int size = 20;
         List<String> keys = new ArrayList<>(size);
         keys.addAll(KeyGenerator.createKeys(size));
 
@@ -29,6 +29,7 @@ public class SkipListTest {
             map.put(key, key);
         }
 
+        System.out.println(tree+"\n\n");
         Assert.assertEquals(map.size(), tree.size());
         Assert.assertFalse(tree.isEmpty());
 
@@ -46,12 +47,14 @@ public class SkipListTest {
 
         keys.forEach(k -> Assert.assertEquals(map.remove(k), tree.remove(k)));
 
+        System.out.println(tree+"\n\n");
         Assert.assertEquals(map.size(), tree.size());
         for (String k : keys) {
             Assert.assertEquals(map.get(k), tree.get(k));
         }
 
         tree.clear();
+        System.out.println(tree+"\n\n");
         Assert.assertTrue(tree.isEmpty());
     }
 

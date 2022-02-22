@@ -6,6 +6,7 @@ import com.igeeksky.xtool.core.math.IntegerValue;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.StringJoiner;
 
 /**
  * @author Patrick.Lau
@@ -139,6 +140,24 @@ public class SkipList<K extends Comparable<K>, V> implements BaseMap<K, V> {
         Arrays.fill(header.forward, null);
         size.set(0);
         height = 1;
+    }
+
+    @Override
+    public String toString() {
+        System.out.println(height);
+        StringJoiner joiner = new StringJoiner("\n\n");
+        for (int h = height - 1; h >= 0; h--) {
+            Node<K, V> node = header.forward[h];
+            StringJoiner subJoiner = new StringJoiner("\t-->\t");
+            subJoiner.add("header");
+            while (node != null) {
+                subJoiner.add(node.key.toString());
+                node = node.forward[h];
+            }
+            subJoiner.add("null");
+            joiner.add(subJoiner.toString());
+        }
+        return joiner.toString();
     }
 
     private int randomLevel() {
