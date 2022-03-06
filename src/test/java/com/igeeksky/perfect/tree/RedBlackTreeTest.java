@@ -167,12 +167,12 @@ public class RedBlackTreeTest {
         long t2 = System.currentTimeMillis();
         System.out.println("rbt-put:\t" + (t2 - t1));
 
-        TreeMap<String, String> map = new TreeMap<>();
+        AvlTree<String, String> avl = new AvlTree<>();
         for (String key : keys) {
-            map.put(key, key);
+            avl.put(key, key);
         }
         long t3 = System.currentTimeMillis();
-        System.out.println("map-put:\t" + (t3 - t2));
+        System.out.println("avl-put:\t" + (t3 - t2));
 
         for (String k : keys) {
             rbt.get(k);
@@ -181,9 +181,21 @@ public class RedBlackTreeTest {
         System.out.println("rbt-get:\t" + (t4 - t3));
 
         for (String k : keys) {
-            map.get(k);
+            avl.get(k);
         }
         long t5 = System.currentTimeMillis();
-        System.out.println("map-get:\t" + (t5 - t4));
+        System.out.println("avl-get:\t" + (t5 - t4));
+
+        for (String k : keys) {
+            rbt.remove(k);
+        }
+        long t6 = System.currentTimeMillis();
+        System.out.println("rbt-del:\t" + (t6 - t5));
+
+        for (String k : keys) {
+            avl.get(k);
+        }
+        long t7 = System.currentTimeMillis();
+        System.out.println("avl-del:\t" + (t7 - t6));
     }
 }
