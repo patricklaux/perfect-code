@@ -15,7 +15,7 @@ public class KeyBits {
 
     /**
      * 获取字符串指定下标位置的 bit
-     *
+     * <p>
      * @param key      键
      * @param bitIndex 下标位置
      * @return 0 或 1；
