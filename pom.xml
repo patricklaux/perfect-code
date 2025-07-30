@@ -15,16 +15,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.igeeksky.xtool</groupId>
+            <artifactId>xtool</artifactId>
+            <version>1.0.6</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
             <scope>test</scope>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.igeeksky.xtool</groupId>
-            <artifactId>xtool</artifactId>
-            <version>1.0.6</version>
         </dependency>
     </dependencies>
 
