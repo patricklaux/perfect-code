@@ -15,8 +15,19 @@ import java.util.List;
  */
 public class StandardTrie<V> implements Trie<V> {
 
+    /**
+     * 键值对数量
+     */
     private int size;
+
+    /**
+     * Radix 值（即字符集大小）
+     */
     private static final int R = 65536;
+
+    /**
+     * 根节点
+     */
     private final StandardNode<V> root = new StandardNode<>(R);
 
     /**
@@ -46,6 +57,7 @@ public class StandardTrie<V> implements Trie<V> {
             node = child;
         }
         if (node.val == null) {
+            // 如果节点原来无值，则键值对计数加 1
             ++size;
         }
         node.val = value;
@@ -77,7 +89,7 @@ public class StandardTrie<V> implements Trie<V> {
         }
         V oldVal = node.val;
         if (oldVal != null) {
-            // 使用惰性删除：仅把关联的值置空，没有真正删除节点
+            // 惰性删除：仅把关联的值置空，没有真正删除节点
             node.val = null;
             --size;
         }
@@ -202,14 +214,13 @@ public class StandardTrie<V> implements Trie<V> {
     }
 
     /**
-     * 朴素Trie节点
+     * 朴素 Trie节点
      *
-     * @param <V> 泛型，值类型
+     * @param <V> 值类型
      */
-    @SuppressWarnings("unchecked")
     private static class StandardNode<V> {
 
-        // 值（支持泛型，可以是非字符串）
+        // 值
         V val;
 
         // 子节点
@@ -219,8 +230,10 @@ public class StandardTrie<V> implements Trie<V> {
         }
 
         // r 为数组容量
+        @SuppressWarnings("unchecked")
         public StandardNode(int R) {
             this.table = new StandardNode[R];
         }
     }
+
 }

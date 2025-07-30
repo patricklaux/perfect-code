@@ -57,4 +57,5 @@ public interface Trie<V> extends BaseMap<String, V> {
      * @return 返回该文本中包含的所有 key 及关联的 value、与及 key 的起止位置
      */
     List<Found<V>> matchAll(String text);
+
 }
