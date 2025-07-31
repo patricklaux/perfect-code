@@ -65,40 +65,40 @@ public class StandardTrieTest {
 
     @Test
     public void prefixMatch() {
-        StandardTrie<String> trie = new StandardTrie<>();
-        trie.put("abc", "abc");
-        trie.put("abd", "abd");
-        Tuple2<String, String> tuple2 = trie.prefixMatch("abcd");
-        Assert.assertEquals("abc", tuple2.getT2());
+        StandardTrie<String> trie = createStandardTrie();
+        Tuple2<String, String> tuple2 = trie.prefixMatch("bades");
+        Assert.assertEquals("[bade, bade]", tuple2.toString());
         tuple2 = trie.prefixMatch("bcd");
         Assert.assertNull(tuple2);
     }
 
     @Test
     public void keysWithPrefix() {
-        StandardTrie<String> trie = new StandardTrie<>();
-        trie.put("ab", "ab");
-        trie.put("abc", "abc");
-        trie.put("abcd", "abcd");
-        trie.put("abd", "abd");
-        trie.put("bcd", "bcd");
-        trie.put("cda", "cda");
-        List<Tuple2<String, String>> keysWithPrefix = trie.keysWithPrefix("ab");
-        Assert.assertEquals("[[ab, ab], [abc, abc], [abcd, abcd], [abd, abd]]", keysWithPrefix.toString());
-        keysWithPrefix = trie.keysWithPrefix("abcde");
+        StandardTrie<String> trie = createStandardTrie();
+        List<Tuple2<String, String>> keysWithPrefix = trie.keysWithPrefix("ca");
+        Assert.assertEquals("[[ca, ca], [cad, cad]]", keysWithPrefix.toString());
+        keysWithPrefix = trie.keysWithPrefix("cbd");
         Assert.assertEquals("[]", keysWithPrefix.toString());
     }
 
     @Test
     public void matchAll() {
-        StandardTrie<String> trie = new StandardTrie<>();
-        trie.put("abcd", "abcd");
-        trie.put("bcdef", "bcdef");
-        trie.put("abe", "abe");
-        List<Found<String>> matchAll = trie.matchAll("abcdefg");
+        StandardTrie<String> trie = createStandardTrie();
+        List<Found<String>> matchAll = trie.matchAll("xxbcaxx");
 
-        String expected = "[{\"start\":0, \"end\":3, \"key\":\"abcd\", \"value\":\"abcd\"}, {\"start\":1, \"end\":5, \"key\":\"bcdef\", \"value\":\"bcdef\"}]";
+        String expected = "[{\"start\":3, \"end\":4, \"key\":\"ca\", \"value\":\"ca\"}]";
         Assert.assertEquals(expected, matchAll.toString());
+    }
+
+    private static StandardTrie<String> createStandardTrie() {
+        StandardTrie<String> trie = new StandardTrie<>();
+        trie.put("bad", "bad");
+        trie.put("bade", "bade");
+        trie.put("bed", "bed");
+        trie.put("ca", "ca");
+        trie.put("cad", "cad");
+        trie.put("dad", "dad");
+        return trie;
     }
 
     @Test
@@ -128,7 +128,7 @@ public class StandardTrieTest {
         System.out.println("trie-get:\t" + (t2 - t1));
 
         for (String key : array) {
-            map.get(key);
+            String ignore = map.get(key);
         }
 
         long t3 = System.currentTimeMillis();
