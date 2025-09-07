@@ -14,6 +14,21 @@ import java.util.*;
 public class SkipListTest {
 
     @Test
+    public void testInteger() {
+        int size = 20;
+        SkipList<Integer, Integer> tree = new SkipList<>();
+        for (int i = 0; i < size; i += 2) {
+            tree.put(i, i);
+        }
+        System.out.println(tree.height());
+        System.out.println(tree + "\n\n");
+
+        tree.remove(8);
+        System.out.println(tree.height());
+        System.out.println(tree + "\n\n");
+    }
+
+    @Test
     public void testGetWithMap() {
         int size = 20;
         List<String> keys = new ArrayList<>(size);
@@ -29,7 +44,7 @@ public class SkipListTest {
             map.put(key, key);
         }
 
-        System.out.println(tree+"\n\n");
+        System.out.println(tree + "\n\n");
         Assert.assertEquals(map.size(), tree.size());
         Assert.assertFalse(tree.isEmpty());
 
@@ -47,14 +62,14 @@ public class SkipListTest {
 
         keys.forEach(k -> Assert.assertEquals(map.remove(k), tree.remove(k)));
 
-        System.out.println(tree+"\n\n");
+        System.out.println(tree + "\n\n");
         Assert.assertEquals(map.size(), tree.size());
         for (String k : keys) {
             Assert.assertEquals(map.get(k), tree.get(k));
         }
 
         tree.clear();
-        System.out.println(tree+"\n\n");
+        System.out.println(tree + "\n\n");
         Assert.assertTrue(tree.isEmpty());
     }
 
@@ -85,7 +100,7 @@ public class SkipListTest {
         System.out.println("skip-get:\t" + (t4 - t3));
 
         for (String k : keys) {
-            map.get(k);
+            String ignored = map.get(k);
         }
         long t5 = System.currentTimeMillis();
         System.out.println("map-get:\t" + (t5 - t4));
